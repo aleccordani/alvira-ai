@@ -1,0 +1,13 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+sk key api open ai.txt
+.env
+backend/.env
+node_modules/
+backend/node_modules/
