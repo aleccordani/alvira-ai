@@ -69,6 +69,16 @@ export default function Sidebar({
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [search, setSearch] = useState("");
+
+  const filteredChats = chatSessions.filter((session) => {
+    const keyword = search.toLowerCase();
+
+    return (
+      session.title.toLowerCase().includes(keyword) ||
+      session.lastMessage.toLowerCase().includes(keyword)
+    );
+  });
 
   return (
     <div className="w-64 bg-[#0d0e14] border-r border-purple-950/25 flex flex-col h-screen overflow-hidden text-[#c5c6c7] shrink-0 font-sans select-none">
@@ -96,12 +106,21 @@ export default function Sidebar({
           <p className="px-3 mb-2 text-[10px] text-[#666a78] uppercase tracking-widest font-bold">
             Recent Chats
           </p>
+          
+          <div className="px-3 mb-3">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search conversations..."
+              className="w-full rounded-lg bg-[#12131a] border border-purple-900/20 px-3 py-2 text-xs text-white placeholder:text-[#666] outline-none focus:border-purple-500"
+            />
+          </div>
 
           <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-hide pr-1">
             {chatSessions.length === 0 ? (
               <p className="px-3 py-2 text-xs text-[#666a78]">No chats yet.</p>
             ) : (
-              chatSessions.map((session) => {
+              filteredChats.map((session) => {
                 const isActive =
                   activeSessionId === session.id && activeTab === "chat";
                 const isEditing = editingId === session.id;
