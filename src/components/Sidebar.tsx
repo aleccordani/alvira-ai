@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { logoText } from "../assets/branding";
 import {
   LayoutDashboard,
@@ -10,6 +10,7 @@ import {
   FolderKanban,
   BarChart3,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { UserProfile, ChatSession } from "../types";
 
@@ -23,6 +24,7 @@ interface SidebarProps {
   activeSessionId: string;
   onSelectChat: (chatId: string) => void;
   onDeleteChat: (chatId: string) => void;
+  onRenameChat: (chatId: string, title: string) => void;
 }
 
 export default function Sidebar({
@@ -35,6 +37,7 @@ export default function Sidebar({
   activeSessionId,
   onSelectChat,
   onDeleteChat,
+  onRenameChat,
 }: SidebarProps) {
   const menuItems = [
     {
@@ -63,6 +66,9 @@ export default function Sidebar({
       icon: <Settings className="w-4.5 h-4.5" />,
     },
   ];
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   return (
     <div className="w-64 bg-[#0d0e14] border-r border-purple-950/25 flex flex-col h-screen overflow-hidden text-[#c5c6c7] shrink-0 font-sans select-none">
@@ -98,6 +104,7 @@ export default function Sidebar({
               chatSessions.map((session) => {
                 const isActive =
                   activeSessionId === session.id && activeTab === "chat";
+                const isEditing = editingId === session.id;
 
                 return (
                   <div
@@ -108,16 +115,50 @@ export default function Sidebar({
                         : "hover:bg-purple-950/10 text-[#c5c6c7]"
                     }`}
                   >
+                    {isEditing ? (
+                      <div className="px-3 py-2.5 pr-9">
+                        <input
+                          autoFocus
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              onRenameChat(session.id, editingTitle);
+                              setEditingId(null);
+                            }
+
+                            if (e.key === "Escape") {
+                              setEditingId(null);
+                            }
+                          }}
+                          onBlur={() => setEditingId(null)}
+                          className="w-full bg-[#0d0e14] border border-purple-500/30 rounded-lg px-2 py-1 text-xs text-white outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => onSelectChat(session.id)}
+                        className="w-full px-3 py-2.5 pr-16 text-left"
+                      >
+                        <span className="block text-xs font-semibold truncate">
+                          {session.title || "New Chat"}
+                        </span>
+                        <span className="block text-[10px] text-[#8b8e99] truncate mt-0.5">
+                          {session.lastMessage || "Open conversation"}
+                        </span>
+                      </button>
+                    )}
+
                     <button
-                      onClick={() => onSelectChat(session.id)}
-                      className="w-full px-3 py-2.5 pr-9 text-left"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditingId(session.id);
+                        setEditingTitle(session.title || "New Chat");
+                      }}
+                      className="absolute right-8 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#8b8e99] opacity-0 group-hover:opacity-100 hover:text-purple-300 hover:bg-purple-950/20 transition"
+                      title="Rename conversation"
                     >
-                      <span className="block text-xs font-semibold truncate">
-                        {session.title || "New Chat"}
-                      </span>
-                      <span className="block text-[10px] text-[#8b8e99] truncate mt-0.5">
-                        {session.lastMessage || "Open conversation"}
-                      </span>
+                      <Pencil className="w-3.5 h-3.5" />
                     </button>
 
                     <button

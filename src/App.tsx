@@ -14,6 +14,7 @@ import {
   getConversation,
   getConversations,
   deleteConversation,
+  renameConversation,
 } from "../services/conversation";
 import { getToken, removeToken } from "../lib/token";
 
@@ -89,6 +90,8 @@ export default function App() {
         return;
       }
 
+      const currentActiveId = activeSessionId;
+
       const response = await getConversations(token);
       const conversations = normalizeConversations(response);
 
@@ -96,15 +99,30 @@ export default function App() {
         mapBackendConversation(conversation),
       );
 
-      setChatSessions(sessions);
+      setChatSessions((prev) => {
+        if (!currentActiveId) return sessions;
+
+        const activeLocalSession = prev.find(
+          (session) => session.id === currentActiveId,
+        );
+
+        if (!activeLocalSession) return sessions;
+
+        return sessions.map((session) =>
+          session.id === currentActiveId
+            ? {
+                ...session,
+                messages:
+                  activeLocalSession.messages.length > session.messages.length
+                    ? activeLocalSession.messages
+                    : session.messages,
+              }
+            : session,
+        );
+      });
 
       if (sessions.length > 0) {
-        setActiveSessionId((currentId) => {
-          const stillExists = sessions.some(
-            (session) => session.id === currentId,
-          );
-          return stillExists ? currentId : sessions[0].id;
-        });
+        setActiveSessionId((currentId) => currentId || sessions[0].id);
       } else {
         setActiveSessionId("");
       }
@@ -222,6 +240,24 @@ export default function App() {
       alert("Failed to delete conversation.");
     }
   };
+  const handleRenameChat = async (chatId: string, title: string) => {
+    const cleanTitle = title.trim();
+
+    if (!cleanTitle) return;
+
+    try {
+      await renameConversation(chatId, cleanTitle);
+
+      setChatSessions((prev) =>
+        prev.map((session) =>
+          session.id === chatId ? { ...session, title: cleanTitle } : session,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to rename conversation:", error);
+      alert("Failed to rename conversation.");
+    }
+  };
 
   if (viewState === "landing") {
     return (
@@ -297,6 +333,7 @@ export default function App() {
         activeSessionId={activeSessionId}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden h-full">

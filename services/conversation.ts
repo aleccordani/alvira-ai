@@ -27,3 +27,11 @@ export const deleteConversation = async (id: string) => {
   const response = await api.delete(`/conversations/${id}`);
   return response.data;
 };
+
+export const renameConversation = async (id: string, title: string) => {
+  const response = await api.patch(`/conversations/${id}`, {
+    title,
+  });
+
+  return response.data;
+};

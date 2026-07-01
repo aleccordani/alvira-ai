@@ -12,7 +12,11 @@ import {
   Clock,
 } from "lucide-react";
 import { ChatMessage, ChatSession, UserProfile } from "../types";
-import { sendChat } from "../../services/chat";
+import { streamChat } from "../../services/chat";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import hljs from "highlight.js";
+import "highlight.js/styles/github-dark.css";
 
 interface ChatTabProps {
   user: UserProfile;
@@ -70,8 +74,14 @@ function RenderMarkdown({ text }: { text: string }) {
                   )}
                 </button>
               </div>
-              <pre className="p-4 overflow-x-auto text-xs font-mono text-[#dcdce0] leading-normal">
-                <code>{code}</code>
+              <pre className="p-4 overflow-x-auto text-xs font-mono leading-normal">
+                <code
+                  dangerouslySetInnerHTML={{
+                    __html: lang
+                      ? hljs.highlight(code, { language: lang }).value
+                      : hljs.highlightAuto(code).value,
+                  }}
+                />
               </pre>
             </div>
           );
@@ -269,58 +279,81 @@ export default function ChatTab({
       userMessage.image = `data:${attachedImage.mimeType};base64,${attachedImage.data}`;
     }
 
-    const optimisticMessages = [...activeSession.messages, userMessage];
+    const assistantMessage: ChatMessage = {
+      id: `local-assistant-${Date.now()}`,
+      sender: "model",
+      text: "Alvira is thinking...",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      simulated: false,
+    };
 
-    onUpdateSessionMessages(activeSession.id, optimisticMessages);
+    onUpdateSessionMessages(activeSession.id, [
+      ...activeSession.messages,
+      userMessage,
+      assistantMessage,
+    ]);
+
     setInputVal("");
     removeAttachment();
-    setLoading(true);
+    setLoading(false);
+
+    let streamedText = "";
 
     try {
-      const response = await sendChat(activeSession.id, messageText);
+      const finalText = await streamChat(
+        activeSession.id,
+        messageText,
+        (chunk) => {
+          streamedText += chunk;
 
-      const assistant = response.data.assistantMessage;
+          onUpdateSessionMessages(activeSession.id, [
+            ...activeSession.messages,
+            userMessage,
+            {
+              ...assistantMessage,
+              text: streamedText,
+              simulated:
+                streamedText.includes("dummy") ||
+                streamedText.includes("quota belum tersedia"),
+            },
+          ]);
+        },
+      );
 
-      const assistantMessage: ChatMessage = {
-        id: assistant.id,
-        sender: "model",
-        text: assistant.content,
-        timestamp: new Date(assistant.createdAt).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        simulated:
-          assistant.content.includes("dummy") ||
-          assistant.content.includes("quota belum tersedia"),
-      };
-
-      onUpdateSessionMessages(activeSession.id, [
-        ...optimisticMessages,
-        assistantMessage,
-      ]);
+      if (finalText && finalText !== streamedText) {
+        onUpdateSessionMessages(activeSession.id, [
+          ...activeSession.messages,
+          userMessage,
+          {
+            ...assistantMessage,
+            text: finalText,
+            simulated:
+              finalText.includes("dummy") ||
+              finalText.includes("quota belum tersedia"),
+          },
+        ]);
+      }
 
       setUser((prev) => ({
         ...prev,
         tokensUsed: Math.min(prev.tokensUsed + 100, prev.tokensLimit),
       }));
+
       await onRefreshConversations();
     } catch (error) {
       console.error(error);
 
-      const errorMessage: ChatMessage = {
-        id: `local-error-${Date.now()}`,
-        sender: "model",
-        text: "Gagal terhubung ke backend Alvira. Pastikan backend berjalan di http://localhost:5000.",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        simulated: true,
-      };
-
       onUpdateSessionMessages(activeSession.id, [
-        ...optimisticMessages,
-        errorMessage,
+        ...activeSession.messages,
+        userMessage,
+        {
+          ...assistantMessage,
+          text: "Gagal terhubung ke backend Alvira. Pastikan backend berjalan di http://localhost:5000.",
+          simulated: true,
+        },
       ]);
     } finally {
       setLoading(false);

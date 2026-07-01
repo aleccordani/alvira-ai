@@ -84,8 +84,35 @@ export class OpenAIService {
   }
 
   async generateTitle(content: string): Promise<string> {
-    const cleanTitle = content.trim().slice(0, 40);
+    const cleaned = content
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/[^\w\sÀ-ÿ]/g, "");
 
-    return cleanTitle || "New Chat";
+    if (!cleaned) return "New Chat";
+
+    const stopWords = [
+      "tolong",
+      "coba",
+      "dong",
+      "please",
+      "jelaskan",
+      "explain",
+      "how",
+      "to",
+      "cara",
+      "itu",
+      "apa",
+      "yang",
+    ];
+
+    const words = cleaned
+      .split(" ")
+      .filter((word) => !stopWords.includes(word.toLowerCase()))
+      .slice(0, 6);
+
+    const title = words.join(" ").trim();
+
+    return title || cleaned.slice(0, 40) || "New Chat";
   }
 }
