@@ -15,9 +15,11 @@ import {
   Loader2,
   FileText,
   Github,
-  Apple
+  Apple,
 } from "lucide-react";
 import { UserProfile } from "../types";
+import { loginRequest, registerRequest } from "@/services/auth";
+import { saveToken } from "@/lib/token";
 
 interface AuthPageProps {
   onSuccess: (updatedUser: Partial<UserProfile>) => void;
@@ -27,7 +29,11 @@ interface AuthPageProps {
 
 type LangType = "id" | "en";
 
-export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: AuthPageProps) {
+export default function AuthPage({
+  onSuccess,
+  onBack,
+  initialMode = "login",
+}: AuthPageProps) {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [lang, setLang] = useState<LangType>("id");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,9 +63,23 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
     if (hasNumber) score += 33;
     if (hasSpecial) score += 34;
 
-    if (score <= 33) return { label: lang === "id" ? "Lemah" : "Weak", color: "bg-red-500", percentage: 33 };
-    if (score <= 66) return { label: lang === "id" ? "Sedang" : "Medium", color: "bg-yellow-500", percentage: 66 };
-    return { label: lang === "id" ? "Sangat Kuat" : "Very Strong", color: "bg-emerald-500", percentage: 100 };
+    if (score <= 33)
+      return {
+        label: lang === "id" ? "Lemah" : "Weak",
+        color: "bg-red-500",
+        percentage: 33,
+      };
+    if (score <= 66)
+      return {
+        label: lang === "id" ? "Sedang" : "Medium",
+        color: "bg-yellow-500",
+        percentage: 66,
+      };
+    return {
+      label: lang === "id" ? "Sangat Kuat" : "Very Strong",
+      color: "bg-emerald-500",
+      percentage: 100,
+    };
   };
 
   const strength = getPasswordStrength();
@@ -69,14 +89,14 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
     "Establishing secure pipeline...",
     "Decrypting user context...",
     "Optimizing LLM token caching engine...",
-    "Finalizing workspace initialization..."
+    "Finalizing workspace initialization...",
   ];
 
   const loadingStepsId = [
     "Menghubungkan jalur aman...",
     "Mendekripsi konteks pengguna...",
     "Mengoptimalkan mesin cache token LLM...",
-    "Menyelesaikan inisialisasi ruang kerja..."
+    "Menyelesaikan inisialisasi ruang kerja...",
   ];
 
   const steps = lang === "id" ? loadingStepsId : loadingStepsEn;
@@ -91,20 +111,20 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
         "Connecting with Google Secure Gateway...",
         "Authorizing OAuth scopes for Google Identity...",
         "Retrieving user profile info...",
-        "Setting up Alvira workspace..."
+        "Setting up Alvira workspace...",
       ],
       apple: [
         "Initializing Apple ID Authorization Client...",
         "Verifying Apple Private Relay Session...",
         "Retrieving tokenized profile metadata...",
-        "Setting up Alvira workspace..."
+        "Setting up Alvira workspace...",
       ],
       github: [
         "Connecting with GitHub OAuth Secure Gate...",
         "Authenticating secure access token...",
         "Retrieving developer & repository metadata...",
-        "Setting up Alvira workspace..."
-      ]
+        "Setting up Alvira workspace...",
+      ],
     };
 
     const providerStepsId = {
@@ -112,23 +132,24 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
         "Menghubungkan dengan Gerbang Aman Google...",
         "Mengotorisasi cakupan OAuth untuk Google Identity...",
         "Mengambil info profil pengguna...",
-        "Menyiapkan ruang kerja Alvira..."
+        "Menyiapkan ruang kerja Alvira...",
       ],
       apple: [
         "Menginisialisasi Klien Otorisasi Apple ID...",
         "Memverifikasi Sesi Relai Privat Apple...",
         "Mengambil metadata profil yang ditokenisasi...",
-        "Menyiapkan ruang kerja Alvira..."
+        "Menyiapkan ruang kerja Alvira...",
       ],
       github: [
         "Menghubungkan dengan Gerbang Aman OAuth GitHub...",
         "Mengautentikasi token akses aman...",
         "Mengambil metadata pengembang & repositori...",
-        "Menyiapkan ruang kerja Alvira..."
-      ]
+        "Menyiapkan ruang kerja Alvira...",
+      ],
     };
 
-    const activeSteps = lang === "id" ? providerStepsId[provider] : providerStepsEn[provider];
+    const activeSteps =
+      lang === "id" ? providerStepsId[provider] : providerStepsEn[provider];
     setCustomSteps(activeSteps);
 
     let currentStep = 0;
@@ -138,17 +159,19 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
           clearInterval(stepInterval);
           setTimeout(() => {
             setIsLoading(false);
-            
+
             let nameVal = "Alex Rivera";
             let emailVal = "alex.rivera@alvira.ai";
             let bioVal = "Principal Solutions Architect at TechFlow.";
-            let avatarVal = "https://lh3.googleusercontent.com/aida-public/AB6AXuAgbYMLZXHUC_EfeCV6EOAjpI4TJ1IxaVaBX6hUTQh3ctsieIYxdHLCDdFPRUtuG7cArnxA8-51kklrwmKVOlA-9e3srz68gwhZEb69y_fdaKy2JOpK6SLqV1MDruOEO02_VvPKNPepYBZAXeqfD2wKr2x4O2pJ4QcuiDZD1Cpucs4jnzRDyTU3saIzEuTHiEUXbkHuU7flZMC2N4U6NGA_052JycXvda6q_orSLzxx-NjVg659XsGcICp_j5jelpo1gYgPEZWYMBpX";
+            let avatarVal =
+              "https://lh3.googleusercontent.com/aida-public/AB6AXuAgbYMLZXHUC_EfeCV6EOAjpI4TJ1IxaVaBX6hUTQh3ctsieIYxdHLCDdFPRUtuG7cArnxA8-51kklrwmKVOlA-9e3srz68gwhZEb69y_fdaKy2JOpK6SLqV1MDruOEO02_VvPKNPepYBZAXeqfD2wKr2x4O2pJ4QcuiDZD1Cpucs4jnzRDyTU3saIzEuTHiEUXbkHuU7flZMC2N4U6NGA_052JycXvda6q_orSLzxx-NjVg659XsGcICp_j5jelpo1gYgPEZWYMBpX";
 
             if (provider === "google") {
               nameVal = "Dani Muhammad";
               emailVal = "muhmmddani10@gmail.com";
               bioVal = "Google Cloud Certified Developer & AI enthusiast.";
-              avatarVal = "https://api.dicebear.com/7.x/pixel-art/svg?seed=dani";
+              avatarVal =
+                "https://api.dicebear.com/7.x/pixel-art/svg?seed=dani";
             } else if (provider === "apple") {
               nameVal = "Alex Appleby";
               emailVal = "alex.appleby@privaterelay.appleid.com";
@@ -158,14 +181,15 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
               nameVal = "dani-github";
               emailVal = "muhmmddani10@users.noreply.github.com";
               bioVal = "Fullstack developer | Open source contributor.";
-              avatarVal = "https://api.dicebear.com/7.x/identicon/svg?seed=github-dani";
+              avatarVal =
+                "https://api.dicebear.com/7.x/identicon/svg?seed=github-dani";
             }
 
             onSuccess({
               name: nameVal,
               email: emailVal,
               bio: bioVal,
-              avatarUrl: avatarVal
+              avatarUrl: avatarVal,
             });
           }, 600);
           return prev;
@@ -175,60 +199,69 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
     }, 1000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // Validate email
     if (!email || !email.includes("@")) {
-      setError(lang === "id" ? "Alamat email tidak valid." : "Invalid email address.");
-      return;
-    }
-
-    // Validate password
-    if (password.length < 8) {
       setError(
-        lang === "id"
-          ? "Kata sandi minimal harus 8 karakter."
-          : "Password must be at least 8 characters long."
+        lang === "id" ? "Alamat email tidak valid." : "Invalid email address.",
       );
       return;
     }
 
-    if (mode === "register") {
-      if (!name.trim()) {
-        setError(lang === "id" ? "Nama lengkap wajib diisi." : "Full name is required.");
-        return;
-      }
+    if (password.length < 8) {
+      setError(
+        lang === "id"
+          ? "Kata sandi minimal harus 8 karakter."
+          : "Password must be at least 8 characters long.",
+      );
+      return;
     }
 
-    // Trigger simulation
-    setCustomSteps(steps);
-    setIsLoading(true);
-    setLoadingStep(0);
+    if (mode === "register" && !name.trim()) {
+      setError(
+        lang === "id" ? "Nama lengkap wajib diisi." : "Full name is required.",
+      );
+      return;
+    }
 
-    const stepInterval = setInterval(() => {
-      setLoadingStep((prev) => {
-        if (prev >= steps.length - 1) {
-          clearInterval(stepInterval);
-          setTimeout(() => {
-            setIsLoading(false);
-            // Dynamic avatar setup or custom user metadata pass back
-            onSuccess({
-              name: mode === "register" ? name : "Alex Rivera",
-              email: email,
-              bio: mode === "register" ? `${bio} (${role})` : "Principal Solutions Architect at TechFlow.",
-              avatarUrl:
-                mode === "register"
-                  ? `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`
-                  : "https://lh3.googleusercontent.com/aida-public/AB6AXuAgbYMLZXHUC_EfeCV6EOAjpI4TJ1IxaVaBX6hUTQh3ctsieIYxdHLCDdFPRUtuG7cArnxA8-51kklrwmKVOlA-9e3srz68gwhZEb69y_fdaKy2JOpK6SLqV1MDruOEO02_VvPKNPepYBZAXeqfD2wKr2x4O2pJ4QcuiDZD1Cpucs4jnzRDyTU3saIzEuTHiEUXbkHuU7flZMC2N4U6NGA_052JycXvda6q_orSLzxx-NjVg659XsGcICp_j5jelpo1gYgPEZWYMBpX"
-            });
-          }, 600);
-          return prev;
-        }
-        return prev + 1;
+    try {
+      setCustomSteps(steps);
+      setIsLoading(true);
+      setLoadingStep(0);
+
+      const response =
+        mode === "login"
+          ? await loginRequest(email, password)
+          : await registerRequest(name, email, password);
+
+      const token = response.data.token;
+      const user = response.data.user;
+
+      saveToken(token);
+
+      onSuccess({
+        name: user.name,
+        email: user.email,
+        bio: "Alvira AI User",
+        avatarUrl:
+          user.avatar ??
+          `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.name)}`,
       });
-    }, 1000);
+    } catch (error) {
+      setError(
+        mode === "login"
+          ? lang === "id"
+            ? "Email atau kata sandi salah."
+            : "Invalid email or password."
+          : lang === "id"
+            ? "Gagal membuat akun."
+            : "Failed to create account.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const translations = {
@@ -263,7 +296,7 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
       orSeparator: "Atau lanjutkan dengan",
       googleLogin: "Google",
       appleLogin: "Apple",
-      githubLogin: "GitHub"
+      githubLogin: "GitHub",
     },
     en: {
       loginTitle: "Sign In to Your Account",
@@ -296,8 +329,8 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
       orSeparator: "Or continue with",
       googleLogin: "Google",
       appleLogin: "Apple",
-      githubLogin: "GitHub"
-    }
+      githubLogin: "GitHub",
+    },
   };
 
   const t = translations[lang];
@@ -327,7 +360,9 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
             <button
               onClick={() => setLang("id")}
               className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition ${
-                lang === "id" ? "bg-purple-600 text-white" : "text-[#8b8e99] hover:text-white"
+                lang === "id"
+                  ? "bg-purple-600 text-white"
+                  : "text-[#8b8e99] hover:text-white"
               }`}
             >
               ID
@@ -335,7 +370,9 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
             <button
               onClick={() => setLang("en")}
               className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition ${
-                lang === "en" ? "bg-purple-600 text-white" : "text-[#8b8e99] hover:text-white"
+                lang === "en"
+                  ? "bg-purple-600 text-white"
+                  : "text-[#8b8e99] hover:text-white"
               }`}
             >
               EN
@@ -383,7 +420,11 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                     onClick={() => handleSocialLogin("google")}
                     className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0b0c10] border border-purple-950/20 hover:border-purple-600/50 rounded-xl text-xs font-semibold text-white transition duration-200 cursor-pointer shadow-sm hover:shadow-purple-950/30"
                   >
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <svg
+                      className="w-4 h-4 shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
                       <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                         fill="#4285F4"
@@ -462,7 +503,11 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                           <User className="absolute left-3 top-3 w-4 h-4 text-[#8b8e99]" />
                           <input
                             type="text"
-                            placeholder={lang === "id" ? "Contoh: Alex Rivera" : "e.g., Alex Rivera"}
+                            placeholder={
+                              lang === "id"
+                                ? "Contoh: Alex Rivera"
+                                : "e.g., Alex Rivera"
+                            }
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full bg-[#0b0c10] border border-purple-950/30 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-purple-600 transition"
@@ -479,7 +524,11 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                           <FileText className="absolute left-3 top-3 w-4 h-4 text-[#8b8e99]" />
                           <input
                             type="text"
-                            placeholder={lang === "id" ? "Contoh: Principal Developer di Alvira" : "e.g., Principal Developer at Alvira"}
+                            placeholder={
+                              lang === "id"
+                                ? "Contoh: Principal Developer di Alvira"
+                                : "e.g., Principal Developer at Alvira"
+                            }
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
                             className="w-full bg-[#0b0c10] border border-purple-950/30 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-purple-600 transition"
@@ -552,7 +601,11 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-3.5 text-[#8b8e99] hover:text-white"
                       >
-                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {showPassword ? (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -565,8 +618,12 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                       className="mt-3 bg-[#0b0c10]/40 p-3 rounded-xl border border-purple-950/10 space-y-2.5"
                     >
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-[#8b8e99]">{t.passwordStrength}</span>
-                        <span className="font-bold text-white">{strength.label}</span>
+                        <span className="text-[#8b8e99]">
+                          {t.passwordStrength}
+                        </span>
+                        <span className="font-bold text-white">
+                          {strength.label}
+                        </span>
                       </div>
                       <div className="w-full h-1.5 bg-purple-950/40 rounded-full overflow-hidden">
                         <div
@@ -580,36 +637,56 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                         <li className="flex items-center gap-1.5">
                           <span
                             className={`p-0.5 rounded-full ${
-                              isLengthValid ? "bg-emerald-500/20 text-emerald-400" : "bg-purple-950/20 text-purple-600"
+                              isLengthValid
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-purple-950/20 text-purple-600"
                             }`}
                           >
                             <Check className="w-2.5 h-2.5" />
                           </span>
-                          <span className={isLengthValid ? "text-emerald-400 font-semibold" : ""}>
+                          <span
+                            className={
+                              isLengthValid
+                                ? "text-emerald-400 font-semibold"
+                                : ""
+                            }
+                          >
                             {t.reqLength}
                           </span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <span
                             className={`p-0.5 rounded-full ${
-                              hasNumber ? "bg-emerald-500/20 text-emerald-400" : "bg-purple-950/20 text-purple-600"
+                              hasNumber
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-purple-950/20 text-purple-600"
                             }`}
                           >
                             <Check className="w-2.5 h-2.5" />
                           </span>
-                          <span className={hasNumber ? "text-emerald-400 font-semibold" : ""}>
+                          <span
+                            className={
+                              hasNumber ? "text-emerald-400 font-semibold" : ""
+                            }
+                          >
                             {t.reqNum}
                           </span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <span
                             className={`p-0.5 rounded-full ${
-                              hasSpecial ? "bg-emerald-500/20 text-emerald-400" : "bg-purple-950/20 text-purple-600"
+                              hasSpecial
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-purple-950/20 text-purple-600"
                             }`}
                           >
                             <Check className="w-2.5 h-2.5" />
                           </span>
-                          <span className={hasSpecial ? "text-emerald-400 font-semibold" : ""}>
+                          <span
+                            className={
+                              hasSpecial ? "text-emerald-400 font-semibold" : ""
+                            }
+                          >
                             {t.reqSpecial}
                           </span>
                         </li>
@@ -629,7 +706,9 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
 
                 {/* Account toggle link */}
                 <div className="mt-6 pt-5 border-t border-purple-950/25 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs">
-                  <span className="text-[#8b8e99]">{mode === "login" ? t.noAccount : t.haveAccount}</span>
+                  <span className="text-[#8b8e99]">
+                    {mode === "login" ? t.noAccount : t.haveAccount}
+                  </span>
                   <button
                     onClick={() => {
                       setError("");
@@ -637,7 +716,9 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                     }}
                     className="text-purple-400 hover:text-purple-300 font-bold transition flex items-center gap-1"
                   >
-                    <span>{mode === "login" ? t.toggleRegister : t.toggleLogin}</span>
+                    <span>
+                      {mode === "login" ? t.toggleRegister : t.toggleLogin}
+                    </span>
                     <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                   </button>
                 </div>
@@ -686,7 +767,9 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
                     <motion.div
                       className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
                       initial={{ width: "0%" }}
-                      animate={{ width: `${((loadingStep + 1) / steps.length) * 100}%` }}
+                      animate={{
+                        width: `${((loadingStep + 1) / steps.length) * 100}%`,
+                      }}
                       transition={{ duration: 0.8 }}
                     ></motion.div>
                   </div>
@@ -703,7 +786,8 @@ export default function AuthPage({ onSuccess, onBack, initialMode = "login" }: A
 
       {/* Footer */}
       <footer className="py-6 border-t border-purple-950/10 text-center text-[10px] text-[#8b8e99] relative z-10">
-        &copy; 2026 Alvira AI Technologies Inc. All rights reserved. Encrypted end-to-end.
+        &copy; 2026 Alvira AI Technologies Inc. All rights reserved. Encrypted
+        end-to-end.
       </footer>
     </div>
   );

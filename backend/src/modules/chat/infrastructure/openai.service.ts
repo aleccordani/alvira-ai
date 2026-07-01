@@ -33,6 +33,56 @@ export class OpenAIService {
     }
   }
 
+  async streamReply(
+    messages: { role: "system" | "user" | "assistant"; content: string }[],
+    onChunk: (chunk: string) => void,
+  ) {
+    if (!this.client) {
+      const dummy =
+        "OpenAI API key belum tersedia. Ini response dummy streaming dari Alvira.";
+
+      for (const word of dummy.split(" ")) {
+        onChunk(word + " ");
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
+
+      return dummy;
+    }
+
+    try {
+      const stream = await this.client.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages,
+        stream: true,
+      });
+
+      let fullText = "";
+
+      for await (const part of stream) {
+        const chunk = part.choices[0]?.delta?.content || "";
+
+        if (chunk) {
+          fullText += chunk;
+          onChunk(chunk);
+        }
+      }
+
+      return fullText;
+    } catch (error) {
+      console.error("OpenAI stream error:", error);
+
+      const fallback =
+        "OpenAI quota belum tersedia. Ini response dummy streaming sementara dari Alvira.";
+
+      for (const word of fallback.split(" ")) {
+        onChunk(word + " ");
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
+
+      return fallback;
+    }
+  }
+
   async generateTitle(content: string): Promise<string> {
     const cleanTitle = content.trim().slice(0, 40);
 

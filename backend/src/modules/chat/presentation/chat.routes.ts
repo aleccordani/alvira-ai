@@ -7,6 +7,7 @@ import { PrismaMessageRepository } from "../../message/infrastructure/prisma-mes
 import { PrismaUsageRepository } from "../../usage/infrastructure/prisma-usage.repository.js";
 
 import { SendChatUseCase } from "../application/send-chat.usecase.js";
+import { StreamChatUseCase } from "../application/stream-chat.usecase.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 
 import { OpenAIService } from "../infrastructure/openai.service.js";
@@ -19,7 +20,6 @@ const conversationRepository = new PrismaConversationRepository();
 const usageRepository = new PrismaUsageRepository();
 
 const openAIService = new OpenAIService();
-
 const createUsageLogUseCase = new CreateUsageLogUseCase(usageRepository);
 
 const sendChatUseCase = new SendChatUseCase(
@@ -29,8 +29,16 @@ const sendChatUseCase = new SendChatUseCase(
   createUsageLogUseCase,
 );
 
-const controller = new ChatController(sendChatUseCase);
+const streamChatUseCase = new StreamChatUseCase(
+  messageRepository,
+  conversationRepository,
+  openAIService,
+  createUsageLogUseCase,
+);
+
+const controller = new ChatController(sendChatUseCase, streamChatUseCase);
 
 router.post("/", authMiddleware, controller.send);
+router.post("/stream", authMiddleware, controller.stream);
 
 export default router;
