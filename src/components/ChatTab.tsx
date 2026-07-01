@@ -10,6 +10,7 @@ import {
   Check,
   AlertCircle,
   Clock,
+  Paperclip,
 } from "lucide-react";
 import { ChatMessage, ChatSession, UserProfile } from "../types";
 import { streamChat } from "../../services/chat";
@@ -17,6 +18,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
+import { uploadPdfToConversation } from "../../services/file";
 
 interface ChatTabProps {
   user: UserProfile;
@@ -208,9 +210,12 @@ export default function ChatTab({
     data: string;
   } | null>(null);
   const [attachedFileName, setAttachedFileName] = useState("");
+  const [attachedPdf, setAttachedPdf] = useState<File | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (preFilledPrompt) {
@@ -251,14 +256,46 @@ export default function ChatTab({
   const removeAttachment = () => {
     setAttachedImage(null);
     setAttachedFileName("");
+    setAttachedPdf(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
+  const removePdfAttachment = () => {
+    setAttachedPdf(null);
+
+    if (pdfInputRef.current) {
+      pdfInputRef.current.value = "";
+    }
+  };
+
+  const handlePdfUpload = async (file: File) => {
+    if (!activeSession) {
+      alert("Please create a new chat first.");
+      return;
+    }
+
+    try {
+      setUploadingFile(true);
+
+      await uploadPdfToConversation(activeSession.id, file);
+
+      alert(
+        `${file.name} uploaded successfully. You can now ask about this PDF.`,
+      );
+      await onRefreshConversations();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to upload PDF.");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const handleSend = async (messageText = inputVal) => {
-    if (!messageText.trim() && !attachedImage) return;
+    if (!messageText.trim() && !attachedImage && !attachedPdf) return;
 
     if (!activeSession) {
       alert("Please create a new chat first.");
@@ -303,6 +340,10 @@ export default function ChatTab({
     let streamedText = "";
 
     try {
+      if (attachedPdf) {
+        await uploadPdfToConversation(activeSession.id, attachedPdf);
+        removePdfAttachment();
+      }
       const finalText = await streamChat(
         activeSession.id,
         messageText,
@@ -564,24 +605,26 @@ export default function ChatTab({
 
       <div className="p-4 border-t border-purple-950/25 bg-[#0d0e14]/50 shrink-0">
         <div className="max-w-4xl mx-auto">
-          {attachedImage && (
+          {attachedPdf && (
             <div className="mb-3 px-4 py-2 bg-[#16171f] rounded-xl border border-purple-950/30 flex items-center justify-between max-w-sm">
-              <div className="flex items-center gap-2 truncate">
-                <div className="w-8 h-8 rounded bg-[#101117] overflow-hidden flex items-center justify-center border border-purple-950/10 shrink-0">
-                  <img
-                    src={`data:${attachedImage.mimeType};base64,${attachedImage.data}`}
-                    alt="Upload Thumbnail"
-                    className="w-full h-full object-cover"
-                  />
+              <div className="flex items-center gap-3 truncate">
+                <div className="w-9 h-9 rounded-lg bg-red-500/15 border border-red-400/20 flex items-center justify-center shrink-0">
+                  <Paperclip className="w-4 h-4 text-red-300" />
                 </div>
-                <span className="text-xs text-[#c5c6c7] truncate max-w-[180px] font-mono">
-                  {attachedFileName}
-                </span>
+
+                <div className="truncate">
+                  <span className="text-xs text-white truncate block font-semibold">
+                    {attachedPdf.name}
+                  </span>
+                  <span className="text-[10px] text-[#8b8e99] uppercase">
+                    PDF
+                  </span>
+                </div>
               </div>
 
               <button
-                onClick={removeAttachment}
-                className="p-1 hover:bg-purple-950/20 rounded-full text-red-400"
+                onClick={removePdfAttachment}
+                className="p-1 hover:bg-purple-950/20 rounded-full text-[#8b8e99] hover:text-red-400"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -603,6 +646,22 @@ export default function ChatTab({
               className="hidden"
             />
 
+            <input
+              type="file"
+              ref={pdfInputRef}
+              accept="application/pdf"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+
+                if (file) {
+                  setAttachedPdf(file);
+                }
+
+                event.target.value = "";
+              }}
+            />
+
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -610,6 +669,15 @@ export default function ChatTab({
               title="Attach File or Image"
             >
               <Image className="w-4.5 h-4.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => pdfInputRef.current?.click()}
+              disabled={uploadingFile}
+              className="p-3 text-[#8b8e99] hover:text-white hover:bg-purple-950/10 rounded-xl transition disabled:opacity-50"
+              title="Upload PDF"
+            >
+              <Paperclip className="w-4.5 h-4.5" />
             </button>
 
             <button
@@ -645,7 +713,9 @@ export default function ChatTab({
 
             <button
               type="submit"
-              disabled={loading || (!inputVal.trim() && !attachedImage)}
+              disabled={
+                loading || (!inputVal.trim() && !attachedImage && !attachedPdf)
+              }
               className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:opacity-90 disabled:opacity-30 disabled:pointer-events-none shadow transition-all shrink-0"
             >
               <Send className="w-4 h-4" />
