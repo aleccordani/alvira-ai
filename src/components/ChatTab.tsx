@@ -295,17 +295,23 @@ export default function ChatTab({
   };
 
   const handleSend = async (messageText = inputVal) => {
-    if (!messageText.trim() && !attachedImage && !attachedPdf) return;
+    const finalMessageText =
+      messageText.trim() ||
+      (attachedPdf
+        ? `Saya mengupload PDF: ${attachedPdf.name}. Tolong analisis dokumen ini.`
+        : "");
+
+    if (!finalMessageText.trim() && !attachedImage && !attachedPdf) return;
 
     if (!activeSession) {
       alert("Please create a new chat first.");
       return;
     }
-
+    
     const userMessage: ChatMessage = {
       id: `local-user-${Date.now()}`,
       sender: "user",
-      text: messageText,
+      text: finalMessageText,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -346,7 +352,7 @@ export default function ChatTab({
       }
       const finalText = await streamChat(
         activeSession.id,
-        messageText,
+        finalMessageText,
         (chunk) => {
           streamedText += chunk;
 

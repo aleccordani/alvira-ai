@@ -36,6 +36,8 @@ export class StreamChatUseCase {
       data.conversationId,
     );
 
+    const limitedMessages = previousMessages.slice(-20);
+
     const assistantText = await this.openAIService.streamReply(
       [
         {

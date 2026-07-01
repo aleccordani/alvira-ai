@@ -35,13 +35,15 @@ export class SendChatUseCase {
       data.conversationId,
     );
 
+    const limitedMessages = previousMessages.slice(-20);
+
     const aiReply = await this.openAIService.generateReply([
       {
         role: "system",
         content:
           "You are Alvira AI, a smart AI assistant for business productivity.",
       },
-      ...previousMessages.map((message) => ({
+      ...limitedMessages.map((message) => ({
         role: message.role as "user" | "assistant" | "system",
         content: message.content,
       })),
