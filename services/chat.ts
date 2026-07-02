@@ -2,7 +2,20 @@ import { getToken } from "../lib/token";
 
 const API_URL = "http://localhost:5000/api";
 
-export const sendChat = async (conversationId: string, content: string) => {
+export type AiTool =
+  | "general"
+  | "neural-code-studio"
+  | "doc-summarizer"
+  | "lingoflow-translator"
+  | "writing-assistant"
+  | "image-prompter"
+  | "business-strategy-canvas";
+
+export const sendChat = async (
+  conversationId: string,
+  content: string,
+  tool: AiTool = "general",
+) => {
   const token = getToken();
 
   const response = await fetch(`${API_URL}/chat`, {
@@ -11,7 +24,7 @@ export const sendChat = async (conversationId: string, content: string) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ conversationId, content }),
+    body: JSON.stringify({ conversationId, content, tool }),
   });
 
   if (!response.ok) throw new Error("Failed to send chat");
@@ -23,6 +36,7 @@ export const streamChat = async (
   conversationId: string,
   content: string,
   onChunk: (chunk: string) => void,
+  tool: AiTool = "general",
 ) => {
   const token = getToken();
 
@@ -32,7 +46,7 @@ export const streamChat = async (
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ conversationId, content }),
+    body: JSON.stringify({ conversationId, content, tool }),
   });
 
   if (!response.ok || !response.body) {

@@ -9,6 +9,7 @@ import ToolsTab from "./components/ToolsTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import SettingsTab from "./components/SettingsTab";
 import { UserProfile, ChatSession, ChatMessage } from "./types";
+import { AiTool } from "../services/chat";
 import {
   createConversation,
   getConversation,
@@ -26,6 +27,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [preFilledPrompt, setPreFilledPrompt] = useState("");
+  const [activeTool, setActiveTool] = useState<AiTool>("general");
 
   const [user, setUser] = useState<UserProfile>({
     name: "Alec",
@@ -347,19 +349,28 @@ export default function App() {
           />
         )}
 
-        {activeTab === "chat" && (
-          <ChatTab
+        <ChatTab
+          user={user}
+          setUser={setUser}
+          activeSession={activeSession}
+          onUpdateSessionMessages={handleUpdateSessionMessages}
+          preFilledPrompt={preFilledPrompt}
+          clearPreFilledPrompt={() => setPreFilledPrompt("")}
+          onRefreshConversations={loadConversations}
+          activeTool={activeTool}
+        />
+
+        {activeTab === "tools" && (
+          <ToolsTab
             user={user}
             setUser={setUser}
-            activeSession={activeSession}
-            onUpdateSessionMessages={handleUpdateSessionMessages}
-            preFilledPrompt={preFilledPrompt}
-            clearPreFilledPrompt={() => setPreFilledPrompt("")}
-            onRefreshConversations={loadConversations}
+            onOpenToolChat={(tool, prompt) => {
+              setActiveTool(tool);
+              setPreFilledPrompt(prompt);
+              setActiveTab("chat");
+            }}
           />
         )}
-
-        {activeTab === "tools" && <ToolsTab user={user} setUser={setUser} />}
 
         {activeTab === "analytics" && <AnalyticsTab />}
 

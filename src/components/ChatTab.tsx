@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Image, Mic, Sparkles, Bot, X, Paperclip } from "lucide-react";
 import { ChatMessage, ChatSession, UserProfile } from "../types";
-import { streamChat } from "../../services/chat";
+import { streamChat, type AiTool } from "../../services/chat";
 import { uploadPdfToConversation } from "../../services/file";
 import ChatMessageItem from "./chat/ChatMessageItem";
 import ChatLoading from "./chat/ChatLoading";
@@ -14,6 +14,7 @@ interface ChatTabProps {
   preFilledPrompt: string;
   clearPreFilledPrompt: () => void;
   onRefreshConversations: () => Promise<void>;
+  activeTool?: AiTool;
 }
 
 const createMessageTimestamp = () => {
@@ -44,6 +45,16 @@ const createUserMessage = (
   return message;
 };
 
+const createAssistantMessage = (): ChatMessage => {
+  return {
+    id: `local-assistant-${Date.now()}`,
+    sender: "model",
+    text: "Alvira is thinking...",
+    timestamp: createMessageTimestamp(),
+    simulated: false,
+  };
+};
+
 export default function ChatTab({
   user,
   setUser,
@@ -52,6 +63,7 @@ export default function ChatTab({
   onRefreshConversations,
   preFilledPrompt,
   clearPreFilledPrompt,
+  activeTool = "general",
 }: ChatTabProps) {
   const [modelMode, setModelMode] = useState<"Alvira-Pro" | "Alvira-1">(
     "Alvira-Pro",
@@ -163,13 +175,7 @@ export default function ChatTab({
 
     const userMessage = createUserMessage(finalMessageText, attachedImage);
 
-    const assistantMessage: ChatMessage = {
-      id: `local-assistant-${Date.now()}`,
-      sender: "model",
-      text: "Alvira is thinking...",
-      timestamp: createMessageTimestamp(),
-      simulated: false,
-    };
+    const assistantMessage = createAssistantMessage();
 
     onUpdateSessionMessages(activeSession.id, [
       ...activeSession.messages,
@@ -206,6 +212,7 @@ export default function ChatTab({
             },
           ]);
         },
+        activeTool,
       );
 
       if (finalText && finalText !== streamedText) {

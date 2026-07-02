@@ -15,21 +15,30 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { UserProfile } from "../types";
+import { AiTool } from "../../services/chat";
 
 interface ToolsTabProps {
   user: UserProfile;
   setUser: React.Dispatch<React.SetStateAction<UserProfile>>;
+  onOpenToolChat: (tool: AiTool, prompt: string) => void;
 }
 
-export default function ToolsTab({ user, setUser }: ToolsTabProps) {
+export default function ToolsTab({
+  user,
+  setUser,
+  onOpenToolChat,
+}: ToolsTabProps) {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Tool 1: Code Studio state
-  const [codePrompt, setCodePrompt] = useState("Create a TypeScript debounce utility function with generic parameter types.");
+  const [codePrompt, setCodePrompt] = useState(
+    "Create a TypeScript debounce utility function with generic parameter types.",
+  );
   const [codeLang, setCodeLang] = useState("TypeScript");
-  const [generatedCode, setGeneratedCode] = useState(`// Connect your GEMINI_API_KEY to synthesize real-time code
+  const [generatedCode, setGeneratedCode] =
+    useState(`// Connect your GEMINI_API_KEY to synthesize real-time code
 export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   return function (...args: Parameters<T>) {
@@ -39,15 +48,21 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
     }, delay);
   };
 }`);
-  const [codeExplanation, setCodeExplanation] = useState("The debounce helper prevents a function from triggering continuously, waiting until a delay window expires.");
+  const [codeExplanation, setCodeExplanation] = useState(
+    "The debounce helper prevents a function from triggering continuously, waiting until a delay window expires.",
+  );
 
   // Tool 2: Summarizer state
-  const [summarizerText, setSummarizerText] = useState("Alvira AI is built secure from the ground up, utilizing containerized environments to handle files server-side. Multi-tier token billing enables organizations to scale their utility demands gracefully. By proxying the API requests securely, the client never directly accesses any secret variables, eliminating the possibility of client-side key leaks. Developers can easily configure customized system prompts inside their user settings to customize the model tone.");
+  const [summarizerText, setSummarizerText] = useState(
+    "Alvira AI is built secure from the ground up, utilizing containerized environments to handle files server-side. Multi-tier token billing enables organizations to scale their utility demands gracefully. By proxying the API requests securely, the client never directly accesses any secret variables, eliminating the possibility of client-side key leaks. Developers can easily configure customized system prompts inside their user settings to customize the model tone.",
+  );
   const [summaryLength, setSummaryLength] = useState("medium");
   const [generatedSummary, setGeneratedSummary] = useState("");
 
   // Tool 3: Translator state
-  const [translateText, setTranslateText] = useState("Welcome back, Alex. Let's build something beautiful and productive today.");
+  const [translateText, setTranslateText] = useState(
+    "Welcome back, Alex. Let's build something beautiful and productive today.",
+  );
   const [targetLang, setTargetLang] = useState("Spanish");
   const [translatedResult, setTranslatedResult] = useState("");
 
@@ -125,11 +140,16 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
       setCodeExplanation(data.explanation || "");
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(prev.tokensUsed + (data.simulated ? 100 : 1800), prev.tokensLimit),
+        tokensUsed: Math.min(
+          prev.tokensUsed + (data.simulated ? 100 : 1800),
+          prev.tokensLimit,
+        ),
       }));
     } catch (err) {
       console.error(err);
-      alert("Error reaching the Code Studio neural node. Re-verify development server status.");
+      alert(
+        "Error reaching the Code Studio neural node. Re-verify development server status.",
+      );
     } finally {
       setLoading(false);
     }
@@ -148,7 +168,10 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
       setGeneratedSummary(data.summary || "");
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(prev.tokensUsed + (data.simulated ? 100 : 1500), prev.tokensLimit),
+        tokensUsed: Math.min(
+          prev.tokensUsed + (data.simulated ? 100 : 1500),
+          prev.tokensLimit,
+        ),
       }));
     } catch (err) {
       console.error(err);
@@ -165,13 +188,19 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: translateText, targetLanguage: targetLang }),
+        body: JSON.stringify({
+          text: translateText,
+          targetLanguage: targetLang,
+        }),
       });
       const data = await res.json();
       setTranslatedResult(data.translatedText || "");
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(prev.tokensUsed + (data.simulated ? 50 : 1000), prev.tokensLimit),
+        tokensUsed: Math.min(
+          prev.tokensUsed + (data.simulated ? 50 : 1000),
+          prev.tokensLimit,
+        ),
       }));
     } catch (err) {
       console.error(err);
@@ -182,7 +211,10 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#0b0c10] text-[#c5c6c7] p-8 font-sans selection:bg-purple-600 selection:text-white" id="tools-tab">
+    <div
+      className="flex-1 overflow-y-auto bg-[#0b0c10] text-[#c5c6c7] p-8 font-sans selection:bg-purple-600 selection:text-white"
+      id="tools-tab"
+    >
       {/* Back to Grid button */}
       {activeTool && (
         <button
@@ -203,10 +235,14 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
           {!activeTool && "Specialized AI Tools"}
         </h1>
         <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
-          {activeTool === "coder" && "Generate highly optimized structural code snippets with type checking."}
-          {activeTool === "summarizer" && "Distill corporate logs and user summaries into pristine, readable insights."}
-          {activeTool === "lingoflow" && "Bridge multi-language assets instantly maintaining exact formatting."}
-          {!activeTool && "Launch dedicated micro-utility workstations scaled to your operational pipeline."}
+          {activeTool === "coder" &&
+            "Generate highly optimized structural code snippets with type checking."}
+          {activeTool === "summarizer" &&
+            "Distill corporate logs and user summaries into pristine, readable insights."}
+          {activeTool === "lingoflow" &&
+            "Bridge multi-language assets instantly maintaining exact formatting."}
+          {!activeTool &&
+            "Launch dedicated micro-utility workstations scaled to your operational pipeline."}
         </p>
       </div>
 
@@ -218,11 +254,31 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
               key={tool.id}
               id={`tool-${tool.id}`}
               onClick={() => {
-                if (tool.idMock) {
-                  alert(`The ${tool.name} workstation is preparing its assets. In the meantime, evaluate the active LingoFlow, Neural Code Studio, or Doc Summarizer endpoints!`);
-                } else {
-                  setActiveTool(tool.id);
-                }
+                const toolPrompts: Record<string, string> = {
+                  coder:
+                    "Act as Neural Code Studio. Help me generate, refactor, debug, or review code professionally.",
+                  summarizer:
+                    "Act as Doc Summarizer. Summarize my document or text into clear, structured insights.",
+                  lingoflow:
+                    "Act as LingoFlow Translator. Translate my text while preserving tone, formatting, and meaning.",
+                  writer:
+                    "Act as Writing Assistant. Help me write, improve, rewrite, or polish content professionally.",
+                  prompter:
+                    "Act as Image Prompter. Help me create a detailed high-quality image generation prompt.",
+                  strategy:
+                    "Act as Business Strategy Canvas. Help me build a clear business strategy, lean canvas, or market plan.",
+                };
+
+                const toolMap: Record<string, AiTool> = {
+                  coder: "neural-code-studio",
+                  summarizer: "doc-summarizer",
+                  lingoflow: "lingoflow-translator",
+                  writer: "writing-assistant",
+                  prompter: "image-prompter",
+                  strategy: "business-strategy-canvas",
+                };
+
+                onOpenToolChat(toolMap[tool.id], toolPrompts[tool.id]);
               }}
               className={`bg-[#16171f] p-6 rounded-2xl border ${tool.colorClass} flex flex-col justify-between h-56 transition group cursor-pointer relative overflow-hidden`}
             >
@@ -258,7 +314,9 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">Generation Prompt</label>
+                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                    Generation Prompt
+                  </label>
                   <textarea
                     rows={2}
                     value={codePrompt}
@@ -267,7 +325,9 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
                   ></textarea>
                 </div>
                 <div>
-                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">Target Language</label>
+                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                    Target Language
+                  </label>
                   <select
                     value={codeLang}
                     onChange={(e) => setCodeLang(e.target.value)}
@@ -287,19 +347,31 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
               >
-                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />}
-                <span>{loading ? "Compiling Logic..." : "Synthesize Studio Code"}</span>
+                {loading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Cpu className="w-4 h-4" />
+                )}
+                <span>
+                  {loading ? "Compiling Logic..." : "Synthesize Studio Code"}
+                </span>
               </button>
 
               <div className="pt-4 border-t border-purple-950/15">
                 <div className="bg-[#0a0a0f] rounded-xl border border-purple-950/30 overflow-hidden">
                   <div className="bg-[#121218] px-4 py-2 border-b border-purple-950/25 flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-blue-400 font-bold uppercase">{codeLang} Output Editor</span>
+                    <span className="text-[10px] font-mono text-blue-400 font-bold uppercase">
+                      {codeLang} Output Editor
+                    </span>
                     <button
                       onClick={() => copyCode(generatedCode)}
                       className="p-1 text-[#8b8e99] hover:text-white flex items-center gap-1 text-[10px] font-semibold"
                     >
-                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
                       <span>{copied ? "Copied!" : "Copy Code"}</span>
                     </button>
                   </div>
@@ -310,7 +382,9 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
 
                 {codeExplanation && (
                   <div className="mt-4 p-4 bg-[#101117] rounded-xl border border-purple-950/15 text-xs text-[#8b8e99] leading-relaxed">
-                    <span className="font-bold text-white block mb-1">Architectural Insight:</span>
+                    <span className="font-bold text-white block mb-1">
+                      Architectural Insight:
+                    </span>
                     {codeExplanation}
                   </div>
                 )}
@@ -322,7 +396,9 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
           {activeTool === "summarizer" && (
             <div className="space-y-6">
               <div>
-                <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">Paste raw transcript, notes, or logs</label>
+                <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                  Paste raw transcript, notes, or logs
+                </label>
                 <textarea
                   rows={6}
                   value={summarizerText}
@@ -353,15 +429,25 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
                   disabled={loading}
                   className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
                 >
-                  {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 animate-pulse" />}
-                  <span>{loading ? "Extracting insights..." : "Draft Bulleted Summary"}</span>
+                  {loading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 animate-pulse" />
+                  )}
+                  <span>
+                    {loading
+                      ? "Extracting insights..."
+                      : "Draft Bulleted Summary"}
+                  </span>
                 </button>
               </div>
 
               {generatedSummary && (
                 <div className="pt-4 border-t border-purple-950/15">
                   <div className="bg-[#101117] border border-purple-950/20 rounded-xl p-5 text-sm leading-relaxed text-[#c5c6c7] whitespace-pre-line">
-                    <span className="font-bold text-white block mb-3 border-b border-purple-950/10 pb-1.5">Executive Digest Summary:</span>
+                    <span className="font-bold text-white block mb-3 border-b border-purple-950/10 pb-1.5">
+                      Executive Digest Summary:
+                    </span>
                     {generatedSummary}
                   </div>
                 </div>
@@ -374,7 +460,9 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">Original Text</label>
+                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                    Original Text
+                  </label>
                   <textarea
                     rows={4}
                     value={translateText}
@@ -383,7 +471,9 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
                   ></textarea>
                 </div>
                 <div>
-                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">Target Language</label>
+                  <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                    Target Language
+                  </label>
                   <select
                     value={targetLang}
                     onChange={(e) => setTargetLang(e.target.value)}
@@ -403,14 +493,24 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
               >
-                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                <span>{loading ? "Translating context..." : "Run LingoFlow Translation"}</span>
+                {loading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Globe className="w-4 h-4" />
+                )}
+                <span>
+                  {loading
+                    ? "Translating context..."
+                    : "Run LingoFlow Translation"}
+                </span>
               </button>
 
               {translatedResult && (
                 <div className="pt-4 border-t border-purple-950/15">
                   <div className="bg-[#101117] border border-purple-950/20 rounded-xl p-5 text-sm leading-relaxed text-emerald-400 font-mono">
-                    <span className="font-bold text-white block mb-2 text-xs font-sans">Polyglot Translated Output:</span>
+                    <span className="font-bold text-white block mb-2 text-xs font-sans">
+                      Polyglot Translated Output:
+                    </span>
                     {translatedResult}
                   </div>
                 </div>
