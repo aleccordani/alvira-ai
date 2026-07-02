@@ -1,19 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Send,
-  Image,
-  Mic,
-  Sparkles,
-  Bot,
-  X,
-  Paperclip,
-} from "lucide-react";
+import { Send, Image, Mic, Sparkles, Bot, X, Paperclip } from "lucide-react";
 import { ChatMessage, ChatSession, UserProfile } from "../types";
 import { streamChat } from "../../services/chat";
-import "highlight.js/styles/github-dark.css";
 import { uploadPdfToConversation } from "../../services/file";
-import RenderMarkdown from "./chat/RenderMarkdown";
 import ChatMessageItem from "./chat/ChatMessageItem";
+import ChatLoading from "./chat/ChatLoading";
 
 interface ChatTabProps {
   user: UserProfile;
@@ -24,6 +15,34 @@ interface ChatTabProps {
   clearPreFilledPrompt: () => void;
   onRefreshConversations: () => Promise<void>;
 }
+
+const createMessageTimestamp = () => {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const createUserMessage = (
+  text: string,
+  attachedImage: {
+    mimeType: string;
+    data: string;
+  } | null,
+): ChatMessage => {
+  const message: ChatMessage = {
+    id: `local-user-${Date.now()}`,
+    sender: "user",
+    text,
+    timestamp: createMessageTimestamp(),
+  };
+
+  if (attachedImage) {
+    message.image = `data:${attachedImage.mimeType};base64,${attachedImage.data}`;
+  }
+
+  return message;
+};
 
 export default function ChatTab({
   user,
@@ -142,28 +161,13 @@ export default function ChatTab({
       return;
     }
 
-    const userMessage: ChatMessage = {
-      id: `local-user-${Date.now()}`,
-      sender: "user",
-      text: finalMessageText,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    if (attachedImage) {
-      userMessage.image = `data:${attachedImage.mimeType};base64,${attachedImage.data}`;
-    }
+    const userMessage = createUserMessage(finalMessageText, attachedImage);
 
     const assistantMessage: ChatMessage = {
       id: `local-assistant-${Date.now()}`,
       sender: "model",
       text: "Alvira is thinking...",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      timestamp: createMessageTimestamp(),
       simulated: false,
     };
 
@@ -354,31 +358,7 @@ export default function ChatTab({
           </div>
         )}
 
-        {loading && (
-          <div className="max-w-4xl mx-auto flex gap-4 justify-start">
-            <div className="w-8 h-8 rounded-full bg-purple-950/40 border border-purple-500/20 flex items-center justify-center shrink-0 animate-spin">
-              <Bot className="w-4 h-4 text-purple-400" />
-            </div>
-
-            <div className="max-w-[80%]">
-              <div className="bg-[#16171f] border border-purple-950/20 p-4 rounded-2xl rounded-tl-none text-[#8b8e99] text-xs flex items-center gap-3">
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" />
-                  <div
-                    className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  />
-                  <div
-                    className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"
-                    style={{ animationDelay: "300ms" }}
-                  />
-                </div>
-
-                <span>Alvira AI is synthesizing response...</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {loading && <ChatLoading />}
 
         <div ref={chatEndRef} />
       </div>
