@@ -6,6 +6,7 @@ import { LINGOFLOW_PROMPT } from "../prompts/lingoFlow.js";
 import { WRITING_ASSISTANT_PROMPT } from "../prompts/writingAssistant.js";
 import { IMAGE_PROMPTER_PROMPT } from "../prompts/imagePrompter.js";
 import { BUSINESS_STRATEGY_PROMPT } from "../prompts/businessStrategy.js";
+import { GenerateAIRequest } from "../domain/ai.types.js";
 
 const promptRegistry: Record<AiTool, string> = {
   general: GENERAL_PROMPT,
@@ -20,3 +21,35 @@ const promptRegistry: Record<AiTool, string> = {
 export const getSystemPrompt = (tool: AiTool = "general") => {
   return promptRegistry[tool] ?? GENERAL_PROMPT;
 };
+
+export function codeExplainPrompt(
+  language: string,
+  code: string,
+): GenerateAIRequest {
+  return {
+    system:
+      "You are Alvira Neural Code Studio, a senior software engineer that explains code clearly and professionally. Always return valid JSON only.",
+    prompt: `
+Explain this ${language} code.
+
+Return ONLY valid JSON with this structure:
+{
+  "summary": "short summary",
+  "explanation": [
+    {
+      "title": "section title",
+      "content": "section explanation"
+    }
+  ],
+  "complexity": "time/space complexity if applicable",
+  "bestPractices": ["best practice 1"],
+  "suggestions": ["suggestion 1"]
+}
+
+Code:
+${code}
+`,
+    temperature: 0.3,
+    maxTokens: 1200,
+  };
+}

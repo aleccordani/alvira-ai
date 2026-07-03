@@ -7,6 +7,7 @@ import messageRoutes from "./modules/message/presentation/message.routes.js";
 import chatRoutes from "./modules/chat/presentation/chat.routes.js";
 import fileRoutes from "./modules/file/presentation/file.routes.js";
 import documentRoutes from "./modules/pdf/presentation/document.routes.js";
+import codeRoutes from "./modules/tools/code/presentation/code.routes.js";
 
 
 
@@ -29,6 +30,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/files", fileRoutes)
 app.use("/api/documents", documentRoutes);
+app.use("/api/tools/code", codeRoutes);
 
 
 app.use(errorMiddleware);
