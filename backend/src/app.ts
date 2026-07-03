@@ -6,6 +6,8 @@ import conversationRoutes from "./modules/conversation/presentation/conversation
 import messageRoutes from "./modules/message/presentation/message.routes.js";
 import chatRoutes from "./modules/chat/presentation/chat.routes.js";
 import fileRoutes from "./modules/file/presentation/file.routes.js";
+import documentRoutes from "./modules/pdf/presentation/document.routes.js";
+
 
 
 const app = express();
@@ -25,7 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api/files", fileRoutes);
+app.use("/api/files", fileRoutes)
+app.use("/api/documents", documentRoutes);
 
 
 app.use(errorMiddleware);
