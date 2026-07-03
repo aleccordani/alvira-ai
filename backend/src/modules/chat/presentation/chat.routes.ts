@@ -13,20 +13,30 @@ import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.
 import { OpenAIService } from "../infrastructure/openai.service.js";
 import { ChatController } from "./chat.controller.js";
 
+import { PrismaMemoryRepository } from "../../memory/infrastructure/prisma-memory.repository.js";
+import { MemoryService } from "../../memory/application/memory.service.js";
+
+
 const router = Router();
 
 const messageRepository = new PrismaMessageRepository();
 const conversationRepository = new PrismaConversationRepository();
 const usageRepository = new PrismaUsageRepository();
+const memoryRepository = new PrismaMemoryRepository();
 
 const openAIService = new OpenAIService();
+
 const createUsageLogUseCase = new CreateUsageLogUseCase(usageRepository);
+
+const memoryService = new MemoryService(memoryRepository);
 
 const sendChatUseCase = new SendChatUseCase(
   messageRepository,
   conversationRepository,
   openAIService,
   createUsageLogUseCase,
+  memoryService,
+  
 );
 
 const streamChatUseCase = new StreamChatUseCase(
@@ -34,6 +44,7 @@ const streamChatUseCase = new StreamChatUseCase(
   conversationRepository,
   openAIService,
   createUsageLogUseCase,
+  memoryService,
 );
 
 const controller = new ChatController(sendChatUseCase, streamChatUseCase);

@@ -4,6 +4,7 @@ import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.
 import { OpenAIService } from "../infrastructure/openai.service.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
 import { getAIProfile } from "../../ai/application/profile-registry.js";
+import { MemoryService } from "../../memory/application/memory.service.js";
 
 type SendChatInput = {
   conversationId: string;
@@ -17,6 +18,7 @@ export class SendChatUseCase {
     private readonly conversationRepository: ConversationRepository,
     private readonly openAIService: OpenAIService,
     private readonly createUsageLogUseCase: CreateUsageLogUseCase,
+    private readonly memoryService: MemoryService,
   ) {}
 
   async execute(data: SendChatInput) {
@@ -27,6 +29,8 @@ export class SendChatUseCase {
     if (!conversation) {
       throw new Error("Conversation not found");
     }
+
+    const summary = await this.memoryService.getSummary(data.conversationId);
 
     const userMessage = await this.messageRepository.create({
       conversationId: data.conversationId,
@@ -46,7 +50,10 @@ export class SendChatUseCase {
       [
         {
           role: "system",
-          content: aiProfile.prompt,
+          content: `${aiProfile.prompt}
+
+Conversation Memory:
+${summary || "No memory yet."}`,
         },
         ...limitedMessages.map((message) => ({
           role: message.role as "user" | "assistant" | "system",
@@ -82,6 +89,8 @@ export class SendChatUseCase {
         title,
       });
     }
+
+    await this.memoryService.saveSummary(data.conversationId, data.content);
 
     return {
       conversation: updatedConversation,
