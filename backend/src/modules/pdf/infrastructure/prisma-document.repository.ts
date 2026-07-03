@@ -11,16 +11,22 @@ export class PrismaDocumentRepository implements DocumentRepository {
     });
   }
 
-  async findById(id: string) {
-    return prisma.document.findUnique({
-      where: { id },
+  async findByUserId(userId: string) {
+    return prisma.document.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
   }
 
-  async findByUserId(userId: string) {
-    return prisma.document.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
+  async findById(id: string) {
+    return prisma.document.findUnique({
+      where: {
+        id,
+      },
     });
   }
 
@@ -32,6 +38,24 @@ export class PrismaDocumentRepository implements DocumentRepository {
     return prisma.document.update({
       where: { id: document.id },
       data: document,
+    });
+  }
+
+  async updateExtractedText(id: string, extractedText: string) {
+    await prisma.document.update({
+      where: {
+        id,
+      },
+      data: {
+        extractedText,
+      },
+    });
+  }
+
+  async updateSummary(id: string, summary: string) {
+    await prisma.document.update({
+      where: { id },
+      data: { summary },
     });
   }
 
