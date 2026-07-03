@@ -1,58 +1,11 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../../../middlewares/auth.middleware.js";
-
-import { PrismaConversationRepository } from "../../conversation/infrastructure/prisma-conversation.repository.js";
-import { PrismaMessageRepository } from "../../message/infrastructure/prisma-message.repository.js";
-import { PrismaUsageRepository } from "../../usage/infrastructure/prisma-usage.repository.js";
-
-import { SendChatUseCase } from "../application/send-chat.usecase.js";
-import { StreamChatUseCase } from "../application/stream-chat.usecase.js";
-import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
-
-import { OpenAIService } from "../infrastructure/openai.service.js";
-import { ChatController } from "./chat.controller.js";
-
-import { PrismaMemoryRepository } from "../../memory/infrastructure/prisma-memory.repository.js";
-import { MemoryService } from "../../memory/application/memory.service.js";
-
-import { ChatContextBuilder } from "../application/chat-context.builder.js";
-
+import { chatController } from "../../../container/chat.container.js";
 
 const router = Router();
 
-const messageRepository = new PrismaMessageRepository();
-const conversationRepository = new PrismaConversationRepository();
-const usageRepository = new PrismaUsageRepository();
-const memoryRepository = new PrismaMemoryRepository();
-
-const openAIService = new OpenAIService();
-
-const createUsageLogUseCase = new CreateUsageLogUseCase(usageRepository);
-
-const memoryService = new MemoryService(memoryRepository);
-const chatContextBuilder = new ChatContextBuilder();
-
-const sendChatUseCase = new SendChatUseCase(
-  messageRepository,
-  conversationRepository,
-  openAIService,
-  createUsageLogUseCase,
-  memoryService,
-  
-);
-
-const streamChatUseCase = new StreamChatUseCase(
-  messageRepository,
-  conversationRepository,
-  openAIService,
-  createUsageLogUseCase,
-  memoryService,
-  chatContextBuilder,
-);
-const controller = new ChatController(sendChatUseCase, streamChatUseCase);
-
-router.post("/", authMiddleware, controller.send);
-router.post("/stream", authMiddleware, controller.stream);
+router.post("/", authMiddleware, chatController.send);
+router.post("/stream", authMiddleware, chatController.stream);
 
 export default router;

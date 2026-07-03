@@ -1,7 +1,7 @@
 import { ConversationRepository } from "../../conversation/domain/conversation.repository.js";
 import { MessageRepository } from "../../message/domain/message.repository.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
-import { OpenAIService } from "../infrastructure/openai.service.js";
+import { AIService } from "../../ai/application/ai.service.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
 import { getAIProfile } from "../../ai/application/profile-registry.js";
 import { MemoryService } from "../../memory/application/memory.service.js";
@@ -16,7 +16,7 @@ export class SendChatUseCase {
   constructor(
     private readonly messageRepository: MessageRepository,
     private readonly conversationRepository: ConversationRepository,
-    private readonly openAIService: OpenAIService,
+    private readonly aiService: AIService,
     private readonly createUsageLogUseCase: CreateUsageLogUseCase,
     private readonly memoryService: MemoryService,
   ) {}
@@ -46,8 +46,8 @@ export class SendChatUseCase {
 
     const aiProfile = getAIProfile(data.tool);
 
-    const aiReply = await this.openAIService.generateReply(
-      [
+    const response = await this.aiService.generate({
+      messages: [
         {
           role: "system",
           content: `${aiProfile.prompt}
@@ -60,8 +60,13 @@ ${summary || "No memory yet."}`,
           content: message.content,
         })),
       ],
-      aiProfile,
-    );
+      model: aiProfile.model,
+      temperature: aiProfile.temperature,
+      topP: aiProfile.topP,
+      maxTokens: aiProfile.maxTokens,
+    });
+
+    const aiReply = response.content;
 
     const assistantMessage = await this.messageRepository.create({
       conversationId: data.conversationId,
@@ -82,7 +87,7 @@ ${summary || "No memory yet."}`,
     let updatedConversation = conversation;
 
     if (conversation.title === "New Chat") {
-      const title = await this.openAIService.generateTitle(data.content);
+      const title = this.aiService.generateTitle(data.content);
 
       updatedConversation = await this.conversationRepository.update({
         id: conversation.id,

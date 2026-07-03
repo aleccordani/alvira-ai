@@ -1,10 +1,10 @@
 import { DocumentRepository } from "../domain/document.repository.js";
-import { OpenAIService } from "../../chat/infrastructure/openai.service.js";
+import { AIService } from "../../ai/application/ai.service.js";
 
 export class SummarizeDocumentUseCase {
   constructor(
     private readonly repository: DocumentRepository,
-    private readonly openAIService: OpenAIService,
+    private readonly aiService: AIService,
   ) {}
 
   async execute(id: string, userId: string) {
@@ -24,20 +24,16 @@ export class SummarizeDocumentUseCase {
       throw new Error("Document text is empty.");
     }
 
-    const summary = await this.openAIService.generateReply([
-      {
-        role: "system",
-        content:
-          "You are Alvira PDF Intelligence. Summarize documents clearly and professionally.",
-      },
-      {
-        role: "user",
-        content: `Summarize this document clearly:\n\n${extractedText.slice(
-          0,
-          12000,
-        )}`,
-      },
-    ]);
+    const response = await this.aiService.generate({
+      system:
+        "You are Alvira PDF Intelligence. Summarize documents clearly and professionally.",
+
+      prompt: `Summarize this document clearly:
+
+${extractedText.slice(0, 12000)}`,
+    });
+
+    const summary = response.content;
 
     await this.repository.updateSummary(id, summary);
 

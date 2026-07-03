@@ -1,7 +1,7 @@
 import { ConversationRepository } from "../../conversation/domain/conversation.repository.js";
 import { MessageRepository } from "../../message/domain/message.repository.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
-import { OpenAIService } from "../infrastructure/openai.service.js";
+import { AIService } from "../../ai/application/ai.service.js";
 import { getAIProfile } from "../../ai/application/profile-registry.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
 import { MemoryService } from "../../memory/application/memory.service.js";
@@ -18,7 +18,7 @@ export class StreamChatUseCase {
   constructor(
     private readonly messageRepository: MessageRepository,
     private readonly conversationRepository: ConversationRepository,
-    private readonly openAIService: OpenAIService,
+    private readonly aiService: AIService,
     private readonly createUsageLogUseCase: CreateUsageLogUseCase,
     private readonly memoryService: MemoryService,
     private readonly chatContextBuilder: ChatContextBuilder,
@@ -53,11 +53,16 @@ export class StreamChatUseCase {
       messages: limitedMessages,
     });
 
-    const assistantText = await this.openAIService.streamReply(
+    const response = await this.aiService.stream({
       messages,
-      data.onChunk,
-      aiProfile,
-    );
+      model: aiProfile.model,
+      temperature: aiProfile.temperature,
+      topP: aiProfile.topP,
+      maxTokens: aiProfile.maxTokens,
+      onChunk: data.onChunk,
+    });
+
+    const assistantText = response.content;
 
     const assistantMessage = await this.messageRepository.create({
       conversationId: data.conversationId,
@@ -78,7 +83,7 @@ export class StreamChatUseCase {
     let updatedConversation = conversation;
 
     if (conversation.title === "New Chat") {
-      const title = await this.openAIService.generateTitle(data.content);
+      const title = this.aiService.generateTitle(data.content);
 
       updatedConversation = await this.conversationRepository.update({
         id: conversation.id,
