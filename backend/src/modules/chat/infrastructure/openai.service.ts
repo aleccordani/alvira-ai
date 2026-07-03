@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { env } from "../../../config/env.js";
+import { AIProfile } from "../../ai/domain/ai-profile.js";
 
 export class OpenAIService {
   private client: OpenAI | null = null;
@@ -14,6 +15,7 @@ export class OpenAIService {
 
   async generateReply(
     messages: { role: "system" | "user" | "assistant"; content: string }[],
+    profile?: AIProfile,
   ) {
     if (!this.client) {
       return "OpenAI API key belum tersedia. Ini response dummy dari Alvira.";
@@ -21,8 +23,11 @@ export class OpenAIService {
 
     try {
       const completion = await this.client.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: profile?.model ?? "gpt-4.1-mini",
         messages,
+        temperature: profile?.temperature ?? 0.7,
+        top_p: profile?.topP ?? 1,
+        max_tokens: profile?.maxTokens ?? 2000,
       });
 
       return completion.choices[0]?.message?.content || "Tidak ada response.";
@@ -36,6 +41,7 @@ export class OpenAIService {
   async streamReply(
     messages: { role: "system" | "user" | "assistant"; content: string }[],
     onChunk: (chunk: string) => void,
+    profile?: AIProfile,
   ) {
     if (!this.client) {
       const dummy =
@@ -51,8 +57,11 @@ export class OpenAIService {
 
     try {
       const stream = await this.client.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: profile?.model ?? "gpt-4.1-mini",
         messages,
+        temperature: profile?.temperature ?? 0.7,
+        top_p: profile?.topP ?? 1,
+        max_tokens: profile?.maxTokens ?? 2000,
         stream: true,
       });
 

@@ -2,7 +2,7 @@ import { ConversationRepository } from "../../conversation/domain/conversation.r
 import { MessageRepository } from "../../message/domain/message.repository.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { OpenAIService } from "../infrastructure/openai.service.js";
-import { getSystemPrompt } from "../../ai/application/prompt-registry.js";
+import { getAIProfile } from "../../ai/application/profile-registry.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
 
 type StreamChatInput = {
@@ -40,12 +40,13 @@ export class StreamChatUseCase {
     );
 
     const limitedMessages = previousMessages.slice(-20);
+    const aiProfile = getAIProfile(data.tool);
 
     const assistantText = await this.openAIService.streamReply(
       [
         {
           role: "system",
-          content: getSystemPrompt(data.tool),
+          content: aiProfile.prompt,
         },
         ...previousMessages.map((message) => ({
           role: message.role as "user" | "assistant" | "system",
@@ -53,6 +54,7 @@ export class StreamChatUseCase {
         })),
       ],
       data.onChunk,
+      aiProfile,
     );
 
     const assistantMessage = await this.messageRepository.create({

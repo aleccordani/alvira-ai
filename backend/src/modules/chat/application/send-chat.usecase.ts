@@ -3,6 +3,7 @@ import { MessageRepository } from "../../message/domain/message.repository.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { OpenAIService } from "../infrastructure/openai.service.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
+import { getAIProfile } from "../../ai/application/profile-registry.js";
 
 type SendChatInput = {
   conversationId: string;
@@ -39,17 +40,21 @@ export class SendChatUseCase {
 
     const limitedMessages = previousMessages.slice(-20);
 
-    const aiReply = await this.openAIService.generateReply([
-      {
-        role: "system",
-        content:
-          "You are Alvira AI, a smart AI assistant for business productivity.",
-      },
-      ...limitedMessages.map((message) => ({
-        role: message.role as "user" | "assistant" | "system",
-        content: message.content,
-      })),
-    ]);
+    const aiProfile = getAIProfile(data.tool);
+
+    const aiReply = await this.openAIService.generateReply(
+      [
+        {
+          role: "system",
+          content: aiProfile.prompt,
+        },
+        ...limitedMessages.map((message) => ({
+          role: message.role as "user" | "assistant" | "system",
+          content: message.content,
+        })),
+      ],
+      aiProfile,
+    );
 
     const assistantMessage = await this.messageRepository.create({
       conversationId: data.conversationId,
