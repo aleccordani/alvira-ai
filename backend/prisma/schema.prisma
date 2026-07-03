@@ -55,12 +55,13 @@ model User {
 }
 
 model Conversation {
-  id        String   @id @default(uuid())
+  id        String              @id @default(uuid())
   title     String
   userId    String
-  isPinned  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isPinned  Boolean             @default(false)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  memory    ConversationMemory?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -97,4 +98,14 @@ model UsageLog {
   conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
 
   @@map("usage_logs")
+}
+
+model ConversationMemory {
+  conversationId String @id
+
+  summary String @db.Text
+
+  updatedAt DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
