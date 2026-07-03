@@ -20,7 +20,7 @@ import { AiTool } from "../../services/chat";
 interface ToolsTabProps {
   user: UserProfile;
   setUser: React.Dispatch<React.SetStateAction<UserProfile>>;
-  onOpenToolChat: (tool: AiTool, prompt: string) => void;
+  onOpenToolChat: (tool: AiTool) => void;
 }
 
 export default function ToolsTab({
@@ -119,6 +119,15 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
       colorClass: "border-yellow-900/30 hover:border-yellow-600/40",
     },
   ];
+
+  const toolMap: Record<string, AiTool> = {
+    coder: "neural-code-studio",
+    summarizer: "doc-summarizer",
+    lingoflow: "lingoflow-translator",
+    writer: "writing-assistant",
+    prompter: "image-prompter",
+    strategy: "business-strategy-canvas",
+  };
 
   const copyCode = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -254,31 +263,7 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
               key={tool.id}
               id={`tool-${tool.id}`}
               onClick={() => {
-                const toolPrompts: Record<string, string> = {
-                  coder:
-                    "Act as Neural Code Studio. Help me generate, refactor, debug, or review code professionally.",
-                  summarizer:
-                    "Act as Doc Summarizer. Summarize my document or text into clear, structured insights.",
-                  lingoflow:
-                    "Act as LingoFlow Translator. Translate my text while preserving tone, formatting, and meaning.",
-                  writer:
-                    "Act as Writing Assistant. Help me write, improve, rewrite, or polish content professionally.",
-                  prompter:
-                    "Act as Image Prompter. Help me create a detailed high-quality image generation prompt.",
-                  strategy:
-                    "Act as Business Strategy Canvas. Help me build a clear business strategy, lean canvas, or market plan.",
-                };
-
-                const toolMap: Record<string, AiTool> = {
-                  coder: "neural-code-studio",
-                  summarizer: "doc-summarizer",
-                  lingoflow: "lingoflow-translator",
-                  writer: "writing-assistant",
-                  prompter: "image-prompter",
-                  strategy: "business-strategy-canvas",
-                };
-
-                onOpenToolChat(toolMap[tool.id], toolPrompts[tool.id]);
+                onOpenToolChat(toolMap[tool.id]);
               }}
               className={`bg-[#16171f] p-6 rounded-2xl border ${tool.colorClass} flex flex-col justify-between h-56 transition group cursor-pointer relative overflow-hidden`}
             >

@@ -2,10 +2,13 @@ import { ConversationRepository } from "../../conversation/domain/conversation.r
 import { MessageRepository } from "../../message/domain/message.repository.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { OpenAIService } from "../infrastructure/openai.service.js";
+import { getSystemPrompt } from "../../ai/application/prompt-registry.js";
+import { AiTool } from "../../ai/domain/ai-tool.js";
 
 type StreamChatInput = {
   conversationId: string;
   content: string;
+  tool: AiTool;
   onChunk: (chunk: string) => void;
 };
 
@@ -42,8 +45,7 @@ export class StreamChatUseCase {
       [
         {
           role: "system",
-          content:
-            "You are Alvira AI, a smart AI assistant for business productivity.",
+          content: getSystemPrompt(data.tool),
         },
         ...previousMessages.map((message) => ({
           role: message.role as "user" | "assistant" | "system",

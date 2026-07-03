@@ -2,10 +2,12 @@ import { ConversationRepository } from "../../conversation/domain/conversation.r
 import { MessageRepository } from "../../message/domain/message.repository.js";
 import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { OpenAIService } from "../infrastructure/openai.service.js";
+import { AiTool } from "../../ai/domain/ai-tool.js";
 
 type SendChatInput = {
   conversationId: string;
   content: string;
+  tool: AiTool;
 };
 
 export class SendChatUseCase {

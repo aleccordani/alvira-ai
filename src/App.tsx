@@ -349,24 +349,26 @@ export default function App() {
           />
         )}
 
-        <ChatTab
-          user={user}
-          setUser={setUser}
-          activeSession={activeSession}
-          onUpdateSessionMessages={handleUpdateSessionMessages}
-          preFilledPrompt={preFilledPrompt}
-          clearPreFilledPrompt={() => setPreFilledPrompt("")}
-          onRefreshConversations={loadConversations}
-          activeTool={activeTool}
-        />
+        {activeTab === "chat" && (
+          <ChatTab
+            user={user}
+            setUser={setUser}
+            activeSession={activeSession}
+            onUpdateSessionMessages={handleUpdateSessionMessages}
+            preFilledPrompt={preFilledPrompt}
+            clearPreFilledPrompt={() => setPreFilledPrompt("")}
+            onRefreshConversations={loadConversations}
+            activeTool={activeTool}
+          />
+        )}
 
         {activeTab === "tools" && (
           <ToolsTab
             user={user}
             setUser={setUser}
-            onOpenToolChat={(tool, prompt) => {
+            onOpenToolChat={(tool) => {
               setActiveTool(tool);
-              setPreFilledPrompt(prompt);
+              setPreFilledPrompt("");
               setActiveTab("chat");
             }}
           />

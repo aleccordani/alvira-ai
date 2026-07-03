@@ -16,6 +16,7 @@ export class ChatController {
     const result = await this.sendChatUseCase.execute({
       conversationId: body.conversationId,
       content: body.content,
+      tool: body.tool,
     });
 
     return successResponse(res, "Chat response generated", result);
@@ -31,6 +32,7 @@ export class ChatController {
     await this.streamChatUseCase.execute({
       conversationId: body.conversationId,
       content: body.content,
+      tool: body.tool,
       onChunk: (chunk: string) => {
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       },
