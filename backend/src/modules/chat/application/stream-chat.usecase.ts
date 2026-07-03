@@ -5,6 +5,7 @@ import { OpenAIService } from "../infrastructure/openai.service.js";
 import { getAIProfile } from "../../ai/application/profile-registry.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
 import { MemoryService } from "../../memory/application/memory.service.js";
+import { ChatContextBuilder } from "./chat-context.builder.js";
 
 type StreamChatInput = {
   conversationId: string;
@@ -20,6 +21,7 @@ export class StreamChatUseCase {
     private readonly openAIService: OpenAIService,
     private readonly createUsageLogUseCase: CreateUsageLogUseCase,
     private readonly memoryService: MemoryService,
+    private readonly chatContextBuilder: ChatContextBuilder,
   ) {}
 
   async execute(data: StreamChatInput) {
@@ -45,20 +47,14 @@ export class StreamChatUseCase {
     const limitedMessages = previousMessages.slice(-20);
     const aiProfile = getAIProfile(data.tool);
 
-    const assistantText = await this.openAIService.streamReply(
-      [
-        {
-          role: "system",
-          content: `${aiProfile.prompt}
+    const messages = this.chatContextBuilder.build({
+      profile: aiProfile,
+      memory: summary,
+      messages: limitedMessages,
+    });
 
-Conversation Memory:
-${summary || "No memory yet."}`,
-        },
-        ...previousMessages.map((message) => ({
-          role: message.role as "user" | "assistant" | "system",
-          content: message.content,
-        })),
-      ],
+    const assistantText = await this.openAIService.streamReply(
+      messages,
       data.onChunk,
       aiProfile,
     );

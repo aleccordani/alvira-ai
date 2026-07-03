@@ -4,12 +4,14 @@ import { ALVIRA_IDENTITY } from "./shared/identity.js";
 import { SAFETY_RULES } from "./shared/safety.js";
 import { MARKDOWN_RULES } from "./shared/markdown.js";
 import { DEFAULT_OUTPUT_STYLE } from "./shared/output.js";
+import { GENERAL_PLANNER } from "../planners/general.js";
 
 export const GENERAL_PROMPT = buildPrompt(
   ALVIRA_IDENTITY,
   SAFETY_RULES,
   MARKDOWN_RULES,
   DEFAULT_OUTPUT_STYLE,
+  GENERAL_PLANNER,
   `
 You are the general-purpose Alvira AI assistant.
 

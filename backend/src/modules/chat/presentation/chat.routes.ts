@@ -16,6 +16,8 @@ import { ChatController } from "./chat.controller.js";
 import { PrismaMemoryRepository } from "../../memory/infrastructure/prisma-memory.repository.js";
 import { MemoryService } from "../../memory/application/memory.service.js";
 
+import { ChatContextBuilder } from "../application/chat-context.builder.js";
+
 
 const router = Router();
 
@@ -29,6 +31,7 @@ const openAIService = new OpenAIService();
 const createUsageLogUseCase = new CreateUsageLogUseCase(usageRepository);
 
 const memoryService = new MemoryService(memoryRepository);
+const chatContextBuilder = new ChatContextBuilder();
 
 const sendChatUseCase = new SendChatUseCase(
   messageRepository,
@@ -45,8 +48,8 @@ const streamChatUseCase = new StreamChatUseCase(
   openAIService,
   createUsageLogUseCase,
   memoryService,
+  chatContextBuilder,
 );
-
 const controller = new ChatController(sendChatUseCase, streamChatUseCase);
 
 router.post("/", authMiddleware, controller.send);
