@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { AiTool } from "../../services/chat";
+import {
+  explainCode,
+  CodeLanguage,
+  ExplainCodeResult,
+} from "../../services/code";
 
 interface ToolsTabProps {
   user: UserProfile;
@@ -33,24 +38,12 @@ export default function ToolsTab({
   const [copied, setCopied] = useState(false);
 
   // Tool 1: Code Studio state
-  const [codePrompt, setCodePrompt] = useState(
-    "Create a TypeScript debounce utility function with generic parameter types.",
+  const [codeInput, setCodeInput] = useState(
+    "function hello(){console.log('Hello ALVIRA')}",
   );
-  const [codeLang, setCodeLang] = useState("TypeScript");
-  const [generatedCode, setGeneratedCode] =
-    useState(`// Connect your GEMINI_API_KEY to synthesize real-time code
-export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  return function (...args: Parameters<T>) {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      fn(...args);
-    }, delay);
-  };
-}`);
-  const [codeExplanation, setCodeExplanation] = useState(
-    "The debounce helper prevents a function from triggering continuously, waiting until a delay window expires.",
-  );
+  const [codeLang, setCodeLang] = useState<CodeLanguage>("typescript");
+  const [codeResult, setCodeResult] = useState<ExplainCodeResult | null>(null);
+  const [codeError, setCodeError] = useState("");
 
   // Tool 2: Summarizer state
   const [summarizerText, setSummarizerText] = useState(
@@ -138,27 +131,23 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
   // Run Code Generator
   const runCodeGenerator = async () => {
     setLoading(true);
+    setCodeError("");
+
     try {
-      const res = await fetch("/api/generate-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: codePrompt, language: codeLang }),
+      const result = await explainCode({
+        language: codeLang,
+        code: codeInput,
       });
-      const data = await res.json();
-      setGeneratedCode(data.code || "");
-      setCodeExplanation(data.explanation || "");
+
+      setCodeResult(result);
+
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(
-          prev.tokensUsed + (data.simulated ? 100 : 1800),
-          prev.tokensLimit,
-        ),
+        tokensUsed: Math.min(prev.tokensUsed + 100, prev.tokensLimit),
       }));
     } catch (err) {
       console.error(err);
-      alert(
-        "Error reaching the Code Studio neural node. Re-verify development server status.",
-      );
+      setCodeError("Failed to explain code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -263,6 +252,11 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
               key={tool.id}
               id={`tool-${tool.id}`}
               onClick={() => {
+                if (tool.id === "coder") {
+                  setActiveTool("coder");
+                  return;
+                }
+
                 onOpenToolChat(toolMap[tool.id]);
               }}
               className={`bg-[#16171f] p-6 rounded-2xl border ${tool.colorClass} flex flex-col justify-between h-56 transition group cursor-pointer relative overflow-hidden`}
@@ -300,80 +294,95 @@ export function debounce<T extends (...args: any[]) => void>(fn: T, delay: numbe
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
-                    Generation Prompt
+                    Source Code
                   </label>
+
                   <textarea
-                    rows={2}
-                    value={codePrompt}
-                    onChange={(e) => setCodePrompt(e.target.value)}
-                    className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none focus:border-purple-600/50 resize-none font-mono"
-                  ></textarea>
+                    rows={12}
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none resize-none font-mono"
+                  />
                 </div>
+
                 <div>
                   <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
-                    Target Language
+                    Language
                   </label>
+
                   <select
                     value={codeLang}
-                    onChange={(e) => setCodeLang(e.target.value)}
-                    className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none focus:border-purple-600/50 h-[72px]"
+                    onChange={(e) =>
+                      setCodeLang(e.target.value as CodeLanguage)
+                    }
+                    className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white"
                   >
-                    <option>TypeScript</option>
-                    <option>React (TSX)</option>
-                    <option>Python</option>
-                    <option>Go</option>
-                    <option>SQL (PostgreSQL)</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="php">PHP</option>
+                    <option value="go">Go</option>
                   </select>
+
+                  <button
+                    onClick={runCodeGenerator}
+                    disabled={loading}
+                    className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-xs font-bold text-white"
+                  >
+                    {loading ? "Analyzing..." : "Explain Code"}
+                  </button>
                 </div>
               </div>
 
-              <button
-                onClick={runCodeGenerator}
-                disabled={loading}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
-              >
-                {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Cpu className="w-4 h-4" />
-                )}
-                <span>
-                  {loading ? "Compiling Logic..." : "Synthesize Studio Code"}
-                </span>
-              </button>
+              {codeError && (
+                <div className="text-red-400 text-sm">{codeError}</div>
+              )}
 
-              <div className="pt-4 border-t border-purple-950/15">
-                <div className="bg-[#0a0a0f] rounded-xl border border-purple-950/30 overflow-hidden">
-                  <div className="bg-[#121218] px-4 py-2 border-b border-purple-950/25 flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-blue-400 font-bold uppercase">
-                      {codeLang} Output Editor
-                    </span>
-                    <button
-                      onClick={() => copyCode(generatedCode)}
-                      className="p-1 text-[#8b8e99] hover:text-white flex items-center gap-1 text-[10px] font-semibold"
-                    >
-                      {copied ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                      <span>{copied ? "Copied!" : "Copy Code"}</span>
-                    </button>
+              {codeResult && (
+                <div className="space-y-4">
+                  <div className="bg-[#101117] rounded-xl p-5">
+                    <h3 className="font-bold mb-2">Summary</h3>
+                    <p>{codeResult.summary}</p>
                   </div>
-                  <pre className="p-4 overflow-x-auto text-xs font-mono text-[#dcdce0] leading-relaxed max-h-72">
-                    <code>{generatedCode}</code>
-                  </pre>
+
+                  <div className="bg-[#101117] rounded-xl p-5">
+                    <h3 className="font-bold mb-2">Explanation</h3>
+
+                    {codeResult.explanation.map((item, index) => (
+                      <div key={index} className="mb-4">
+                        <h4 className="font-semibold">{item.title}</h4>
+                        <p>{item.content}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-[#101117] rounded-xl p-5">
+                    <h3 className="font-bold mb-2">Complexity</h3>
+                    <p>{codeResult.complexity}</p>
+                  </div>
+
+                  <div className="bg-[#101117] rounded-xl p-5">
+                    <h3 className="font-bold mb-2">Best Practices</h3>
+
+                    <ul className="list-disc ml-5">
+                      {codeResult.bestPractices.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-[#101117] rounded-xl p-5">
+                    <h3 className="font-bold mb-2">Suggestions</h3>
+
+                    <ul className="list-disc ml-5">
+                      {codeResult.suggestions.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-
-                {codeExplanation && (
-                  <div className="mt-4 p-4 bg-[#101117] rounded-xl border border-purple-950/15 text-xs text-[#8b8e99] leading-relaxed">
-                    <span className="font-bold text-white block mb-1">
-                      Architectural Insight:
-                    </span>
-                    {codeExplanation}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           )}
 
