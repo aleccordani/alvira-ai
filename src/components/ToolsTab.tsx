@@ -21,6 +21,7 @@ import {
   CodeLanguage,
   ExplainCodeResult,
 } from "../../services/code";
+import CodeEditor from "./code/CodeEditor";
 
 interface ToolsTabProps {
   user: UserProfile;
@@ -297,11 +298,10 @@ export default function ToolsTab({
                     Source Code
                   </label>
 
-                  <textarea
-                    rows={12}
+                  <CodeEditor
                     value={codeInput}
-                    onChange={(e) => setCodeInput(e.target.value)}
-                    className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none resize-none font-mono"
+                    language={codeLang}
+                    onChange={setCodeInput}
                   />
                 </div>
 
