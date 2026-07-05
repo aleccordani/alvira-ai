@@ -109,3 +109,22 @@ export async function getWorkspaceFiles(
 
   return json.data;
 }
+
+export async function deleteWorkspaceFile(
+  workspaceId: string,
+  fileId: string,
+): Promise<void> {
+  const res = await fetch(
+    `${API_URL}/workspaces/${workspaceId}/files/${fileId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...getAuthHeaders(),
+      },
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to delete document");
+  }
+}

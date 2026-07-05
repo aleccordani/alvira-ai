@@ -16,6 +16,12 @@ router.post(
   workspaceFileController.upload,
 );
 
+router.delete(
+  "/:id/files/:fileId",
+  authMiddleware,
+  workspaceFileController.remove,
+);
+
 router.get("/:id/files", authMiddleware, workspaceFileController.list);
 
 export default router;
