@@ -15,7 +15,13 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
 
   OPENAI_API_KEY: z.string().optional(),
+
   OPENAI_MODEL: z.string().optional(),
+
+  AI_MOCK: z
+    .string()
+    .optional()
+    .transform((value) => value === "true"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

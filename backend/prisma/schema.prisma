@@ -51,6 +51,7 @@ model User {
   conversations Conversation[]
   usageLogs     UsageLog[]
   documents     Document[]
+  workspaces    Workspace[]
 
   @@map("users")
 }
@@ -126,4 +127,55 @@ model Document {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workspace {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+
+  user User @relation(fields: [userId], references: [id])
+
+  files WorkspaceFile[]
+  chunks WorkspaceChunk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkspaceFile {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  filename String
+  mimeType String
+  path     String
+  size     Int
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  chunks WorkspaceChunk[]
+  
+  createdAt DateTime @default(now())
+}
+
+model WorkspaceChunk {
+  id              String   @id @default(cuid())
+
+  workspaceId      String
+  workspaceFileId  String
+
+  content          String
+  embedding        Json
+
+  chunkIndex       Int
+
+  createdAt        DateTime @default(now())
+
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceFile    WorkspaceFile @relation(fields: [workspaceFileId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([workspaceFileId])
 }

@@ -6,9 +6,9 @@ import { ListDocumentsUseCase } from "../modules/pdf/application/list-documents.
 import { GetDocumentUseCase } from "../modules/pdf/application/get-document.usecase.js";
 import { DeleteDocumentUseCase } from "../modules/pdf/application/delete-document.usecase.js";
 import { SummarizeDocumentUseCase } from "../modules/pdf/application/summarize-document.usecase.js";
-
 import { PdfParserService } from "../modules/pdf/infrastructure/pdf-parser.service.js";
 import { DocumentController } from "../modules/pdf/presentation/document.controller.js";
+import { RenameDocumentUseCase } from "../modules/pdf/application/rename-document.usecase.js";
 
 import { aiService } from "./ai.container.js";
 
@@ -33,4 +33,5 @@ export const documentController = new DocumentController(
   new GetDocumentUseCase(repository),
   new DeleteDocumentUseCase(repository),
   summarizeDocumentUseCase,
+  new RenameDocumentUseCase(repository),
 );

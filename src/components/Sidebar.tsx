@@ -11,6 +11,7 @@ import {
   BarChart3,
   Trash2,
   Pencil,
+  BrainCircuit,
 } from "lucide-react";
 import { UserProfile, ChatSession } from "../types";
 
@@ -49,6 +50,11 @@ export default function Sidebar({
       id: "chat",
       label: "AI Chat",
       icon: <MessageSquare className="w-4.5 h-4.5" />,
+    },
+    {
+      id: "workspace",
+      label: "Workspace AI",
+      icon: <BrainCircuit className="w-4.5 h-4.5" />,
     },
     {
       id: "tools",
@@ -106,7 +112,7 @@ export default function Sidebar({
           <p className="px-3 mb-2 text-[10px] text-[#666a78] uppercase tracking-widest font-bold">
             Recent Chats
           </p>
-          
+
           <div className="px-3 mb-3">
             <input
               value={search}

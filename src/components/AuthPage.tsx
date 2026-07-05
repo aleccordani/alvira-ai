@@ -18,8 +18,8 @@ import {
   Apple,
 } from "lucide-react";
 import { UserProfile } from "../types";
-import { loginRequest, registerRequest } from "@/services/auth";
-import { saveToken } from "@/lib/token";
+import { loginRequest, registerRequest } from "@/src/services/auth";
+import { saveToken } from "../lib/token";
 
 interface AuthPageProps {
   onSuccess: (updatedUser: Partial<UserProfile>) => void;

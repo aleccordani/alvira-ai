@@ -18,8 +18,10 @@ router.post(
 );
 
 router.get("/", authMiddleware, documentController.list);
+router.patch("/:id", authMiddleware, documentController.rename);
 router.get("/:id", authMiddleware, documentController.get);
 router.delete("/:id", authMiddleware, documentController.remove);
 router.post("/:id/summarize", authMiddleware, documentController.summarize);
+
 
 export default router;

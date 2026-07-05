@@ -15,13 +15,14 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { UserProfile } from "../types";
-import { AiTool } from "../../services/chat";
+import { AiTool } from "../services/chat";
 import {
   explainCode,
   CodeLanguage,
   ExplainCodeResult,
-} from "../../services/code";
+} from "../services/code";
 import CodeEditor from "./code/CodeEditor";
+import { streamCodeExplanation } from "../services/code-stream";
 
 interface ToolsTabProps {
   user: UserProfile;
@@ -133,14 +134,27 @@ export default function ToolsTab({
   const runCodeGenerator = async () => {
     setLoading(true);
     setCodeError("");
+    setCodeResult(null);
 
     try {
-      const result = await explainCode({
-        language: codeLang,
-        code: codeInput,
-      });
+      let streamedText = "";
 
-      setCodeResult(result);
+      await streamCodeExplanation(codeLang, codeInput, (chunk) => {
+        streamedText += chunk;
+
+        setCodeResult({
+          summary: streamedText,
+          explanation: [
+            {
+              title: "Streaming Analysis",
+              content: streamedText,
+            },
+          ],
+          complexity: "Streaming...",
+          bestPractices: [],
+          suggestions: [],
+        });
+      });
 
       setUser((prev) => ({
         ...prev,
@@ -148,7 +162,7 @@ export default function ToolsTab({
       }));
     } catch (err) {
       console.error(err);
-      setCodeError("Failed to explain code. Please try again.");
+      setCodeError("Failed to stream code explanation. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -9,15 +9,16 @@ import ToolsTab from "./components/ToolsTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import SettingsTab from "./components/SettingsTab";
 import { UserProfile, ChatSession, ChatMessage } from "./types";
-import { AiTool } from "../services/chat";
+import { AiTool } from "./services/chat";
 import {
   createConversation,
   getConversation,
   getConversations,
   deleteConversation,
   renameConversation,
-} from "../services/conversation";
-import { getToken, removeToken } from "../lib/token";
+} from "./services/conversation";
+import { getToken, removeToken } from "./lib/token";
+import { WorkspacePage } from "./modules/workspace";
 
 export default function App() {
   const [viewState, setViewState] = useState<
@@ -379,6 +380,8 @@ export default function App() {
         {activeTab === "settings" && (
           <SettingsTab user={user} setUser={setUser} />
         )}
+        {activeTab === "workspace" && <WorkspacePage />}
+
       </div>
     </div>
   );

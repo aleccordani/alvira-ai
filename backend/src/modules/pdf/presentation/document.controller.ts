@@ -4,6 +4,7 @@ import { ListDocumentsUseCase } from "../application/list-documents.usecase.js";
 import { GetDocumentUseCase } from "../application/get-document.usecase.js";
 import { DeleteDocumentUseCase } from "../application/delete-document.usecase.js";
 import { SummarizeDocumentUseCase } from "../application/summarize-document.usecase.js";
+import { RenameDocumentUseCase } from "../application/rename-document.usecase.js";
 
 export class DocumentController {
   constructor(
@@ -12,6 +13,7 @@ export class DocumentController {
     private readonly getDocumentUseCase: GetDocumentUseCase,
     private readonly deleteDocumentUseCase: DeleteDocumentUseCase,
     private readonly summarizeDocumentUseCase: SummarizeDocumentUseCase,
+    private readonly renameDocumentUseCase: RenameDocumentUseCase,
   ) {}
   upload = async (req: Request, res: Response) => {
     try {
@@ -86,6 +88,27 @@ export class DocumentController {
       return res.status(404).json({
         success: false,
         message: "Document not found.",
+      });
+    }
+  };
+
+  rename = async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id ?? (req as any).user.userId;
+      const { name } = req.body;
+
+      const document = await this.renameDocumentUseCase.execute(
+        req.params.id as string,
+        userId,
+        name,
+      );
+
+      return res.json(document);
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to rename document.",
       });
     }
   };

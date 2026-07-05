@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Image, Mic, Sparkles, Bot, X, Paperclip } from "lucide-react";
 import { ChatMessage, ChatSession, UserProfile } from "../types";
-import { streamChat, type AiTool } from "../../services/chat";
-import { uploadPdfToConversation } from "../../services/file";
+import { streamChat, type AiTool } from "../services/chat";
+import { uploadPdfToConversation } from "../services/file";
 import ChatMessageItem from "./chat/ChatMessageItem";
 import ChatLoading from "./chat/ChatLoading";
 

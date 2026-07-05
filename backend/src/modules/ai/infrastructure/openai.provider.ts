@@ -19,6 +19,26 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async generate(request: GenerateAIRequest): Promise<GenerateAIResponse> {
+    if (env.AI_MOCK) {
+      return {
+        content: `🤖 Mock Response
+
+Berdasarkan dokumen yang ada di workspace ini, ALVIRA berhasil memproses pertanyaan kamu.
+
+Ringkasan sementara:
+- Dokumen berhasil dibaca.
+- Workspace search berhasil berjalan.
+- Prompt builder berhasil membuat konteks.
+- AI provider berhasil mengirim response.
+
+Catatan:
+OpenAI Billing masih dinonaktifkan, jadi ini adalah jawaban simulasi.
+
+Pertanyaan kamu:
+${request.prompt?.split("Question:").pop()?.trim() || request.prompt}`,
+        provider: "openai",
+      };
+    }
     if (!this.client) {
       return {
         content:
@@ -65,6 +85,25 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async stream(request: StreamAIRequest): Promise<GenerateAIResponse> {
+    if (env.AI_MOCK) {
+      const dummy = `🤖 Mock Streaming Response
+
+ALVIRA is currently running in Mock Mode.
+
+OpenAI billing is disabled.
+
+Streaming pipeline works correctly.`;
+
+      for (const word of dummy.split(" ")) {
+        request.onChunk(word + " ");
+        await new Promise((resolve) => setTimeout(resolve, 40));
+      }
+
+      return {
+        content: dummy,
+        provider: "openai",
+      };
+    }
     if (!this.client) {
       const dummy =
         "OpenAI API key belum tersedia. Ini response dummy streaming dari Alvira.";
