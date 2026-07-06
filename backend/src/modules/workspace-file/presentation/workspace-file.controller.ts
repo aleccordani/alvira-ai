@@ -5,12 +5,14 @@ import { GetWorkspaceFilesUseCase } from "../application/get-workspace-files.use
 import { PdfParserService } from "../../pdf/infrastructure/pdf-parser.service.js";
 import { ingestWorkspaceFileUseCase } from "../../workspace-ai/workspace-ai.container.js";
 import { DeleteWorkspaceFileUseCase } from "../application/delete-workspace-file.usecase.js";
+import { RenameWorkspaceFileUseCase } from "../application/rename-workspace-file.usecase.js";
 
 export class WorkspaceFileController {
   constructor(
     private readonly createWorkspaceFileUseCase: CreateWorkspaceFileUseCase,
     private readonly getWorkspaceFilesUseCase: GetWorkspaceFilesUseCase,
     private readonly deleteWorkspaceFileUseCase: DeleteWorkspaceFileUseCase,
+    private readonly renameWorkspaceFileUseCase: RenameWorkspaceFileUseCase,
   ) {}
 
   upload = async (req: Request, res: Response) => {
@@ -79,5 +81,29 @@ export class WorkspaceFileController {
     await this.deleteWorkspaceFileUseCase.execute(workspaceId, fileId);
 
     return successResponse(res, "Workspace file deleted successfully.", null);
+  };
+
+  rename = async (req: Request, res: Response) => {
+    const workspaceId = typeof req.params.id === "string" ? req.params.id : "";
+
+    const fileId =
+      typeof req.params.fileId === "string" ? req.params.fileId : "";
+
+    const { filename } = req.body;
+
+    if (!workspaceId || !fileId || !filename) {
+      return res.status(400).json({
+        success: false,
+        message: "Workspace id, file id, and filename are required.",
+      });
+    }
+
+    const file = await this.renameWorkspaceFileUseCase.execute(
+      workspaceId,
+      fileId,
+      filename,
+    );
+
+    return successResponse(res, "Workspace file renamed successfully.", file);
   };
 }

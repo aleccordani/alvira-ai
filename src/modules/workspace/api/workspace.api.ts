@@ -128,3 +128,31 @@ export async function deleteWorkspaceFile(
     throw new Error("Failed to delete document");
   }
 }
+
+export async function renameWorkspaceFile(
+  workspaceId: string,
+  fileId: string,
+  filename: string,
+): Promise<WorkspaceDocument> {
+  const res = await fetch(
+    `${API_URL}/workspaces/${workspaceId}/files/${fileId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        filename,
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to rename document");
+  }
+
+  const json = await res.json();
+
+  return json.data;
+}

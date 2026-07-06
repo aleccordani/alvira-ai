@@ -16,13 +16,10 @@ import {
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { AiTool } from "../services/chat";
-import {
-  explainCode,
-  CodeLanguage,
-  ExplainCodeResult,
-} from "../services/code";
+import { explainCode, CodeLanguage, ExplainCodeResult } from "../services/code";
 import CodeEditor from "./code/CodeEditor";
 import { streamCodeExplanation } from "../services/code-stream";
+import { useAiTool } from "../modules/ai-tools";
 
 interface ToolsTabProps {
   user: UserProfile;
@@ -53,13 +50,22 @@ export default function ToolsTab({
   );
   const [summaryLength, setSummaryLength] = useState("medium");
   const [generatedSummary, setGeneratedSummary] = useState("");
+  const summarizerTool = useAiTool("summarizer");
 
   // Tool 3: Translator state
   const [translateText, setTranslateText] = useState(
     "Welcome back, Alex. Let's build something beautiful and productive today.",
   );
+
   const [targetLang, setTargetLang] = useState("Spanish");
   const [translatedResult, setTranslatedResult] = useState("");
+
+  // Tool 4: Writing Assistant state
+  const [writerPrompt, setWriterPrompt] = useState(
+    "Write a professional follow-up email to a potential client about ALVIRA AI SaaS.",
+  );
+  const [writerResult, setWriterResult] = useState("");
+  const writerTool = useAiTool("email-writer");
 
   const toolsList = [
     {
@@ -171,24 +177,21 @@ export default function ToolsTab({
   // Run Summarizer
   const runSummarizer = async () => {
     setLoading(true);
+
     try {
-      const res = await fetch("/api/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: summarizerText, length: summaryLength }),
-      });
-      const data = await res.json();
-      setGeneratedSummary(data.summary || "");
+      const result = await summarizerTool.run(
+        `Summary length: ${summaryLength}\n\n${summarizerText}`,
+      );
+
+      setGeneratedSummary(result);
+
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(
-          prev.tokensUsed + (data.simulated ? 100 : 1500),
-          prev.tokensLimit,
-        ),
+        tokensUsed: Math.min(prev.tokensUsed + 150, prev.tokensLimit),
       }));
     } catch (err) {
       console.error(err);
-      alert("Error reaching the Summarization node.");
+      alert("Error reaching the AI Tools summarizer.");
     } finally {
       setLoading(false);
     }
@@ -223,6 +226,26 @@ export default function ToolsTab({
     }
   };
 
+  const runWriter = async () => {
+    setLoading(true);
+
+    try {
+      const result = await writerTool.run(writerPrompt);
+
+      setWriterResult(result);
+
+      setUser((prev) => ({
+        ...prev,
+        tokensUsed: Math.min(prev.tokensUsed + 120, prev.tokensLimit),
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Error reaching the Writing Assistant.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       className="flex-1 overflow-y-auto bg-[#0b0c10] text-[#c5c6c7] p-8 font-sans selection:bg-purple-600 selection:text-white"
@@ -245,6 +268,9 @@ export default function ToolsTab({
           {activeTool === "coder" && "Neural Code Studio"}
           {activeTool === "summarizer" && "Doc Summarizer Workplace"}
           {activeTool === "lingoflow" && "LingoFlow Translator Suite"}
+          {activeTool === "writer" && "Writing Assistant"}
+          {activeTool === "writer" &&
+            "Draft emails, content, and business copy with professional structure."}
           {!activeTool && "Specialized AI Tools"}
         </h1>
         <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
@@ -272,6 +298,15 @@ export default function ToolsTab({
                   return;
                 }
 
+                if (tool.id === "summarizer") {
+                  setActiveTool("summarizer");
+                  return;
+                }
+
+                if (tool.id === "writer") {
+                  setActiveTool("writer");
+                  return;
+                }
                 onOpenToolChat(toolMap[tool.id]);
               }}
               className={`bg-[#16171f] p-6 rounded-2xl border ${tool.colorClass} flex flex-col justify-between h-56 transition group cursor-pointer relative overflow-hidden`}
@@ -394,6 +429,48 @@ export default function ToolsTab({
                         <li key={index}>{item}</li>
                       ))}
                     </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Writing Assistant Active */}
+          {activeTool === "writer" && (
+            <div className="space-y-6">
+              <div>
+                <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                  What do you want to write?
+                </label>
+
+                <textarea
+                  rows={6}
+                  value={writerPrompt}
+                  onChange={(e) => setWriterPrompt(e.target.value)}
+                  className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none focus:border-purple-600/50 resize-y leading-relaxed font-sans"
+                />
+              </div>
+
+              <button
+                onClick={runWriter}
+                disabled={loading}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
+              >
+                {loading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <PenTool className="w-4 h-4" />
+                )}
+                <span>{loading ? "Writing..." : "Generate Writing"}</span>
+              </button>
+
+              {writerResult && (
+                <div className="pt-4 border-t border-purple-950/15">
+                  <div className="bg-[#101117] border border-purple-950/20 rounded-xl p-5 text-sm leading-relaxed text-[#c5c6c7] whitespace-pre-line">
+                    <span className="font-bold text-white block mb-3 border-b border-purple-950/10 pb-1.5">
+                      Generated Draft:
+                    </span>
+                    {writerResult}
                   </div>
                 </div>
               )}

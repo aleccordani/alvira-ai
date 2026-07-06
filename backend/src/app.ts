@@ -11,6 +11,7 @@ import codeRoutes from "./modules/tools/code/presentation/code.routes.js";
 import workspaceRoutes from "./modules/workspace/presentation/workspace.routes.js";
 import workspaceFileRoutes from "./modules/workspace-file/presentation/workspace-file.routes.js";
 import workspaceAiRoutes from "./modules/workspace-ai/presentation/workspace-ai.routes.js";
+import aiToolsRoutes from "./modules/ai-tools/presentation/ai-tools.route.js";
 
 
 const app = express();
@@ -33,12 +34,10 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/tools/code", codeRoutes);
-
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", workspaceFileRoutes);
-
 app.use("/api", workspaceAiRoutes);
-app.use("/api/files", fileRoutes);
+app.use("/api/ai-tools", aiToolsRoutes);
 
 app.use(errorMiddleware);
 

@@ -11,4 +11,5 @@ export const workspaceService = {
   askWorkspace: workspaceApi.askWorkspace,
   getWorkspaceFiles: workspaceApi.getWorkspaceFiles,
   deleteWorkspaceFile: workspaceApi.deleteWorkspaceFile,
+  renameWorkspaceFile: workspaceApi.renameWorkspaceFile,
 };
