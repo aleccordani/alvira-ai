@@ -68,6 +68,13 @@ export default function ToolsTab({
   const [writerResult, setWriterResult] = useState("");
   const writerTool = useAiTool("email-writer");
 
+  // Tool 5: Business Analyzer state
+  const [businessIdea, setBusinessIdea] = useState(
+    "AI SaaS platform for students, creators, and small businesses",
+  );
+  const [businessResult, setBusinessResult] = useState("");
+  const businessTool = useAiTool("business-analyzer");
+
   const toolsList = [
     {
       id: "coder",
@@ -223,6 +230,26 @@ ${translateText}`,
     }
   };
 
+  const runBusinessAnalyzer = async () => {
+    setLoading(true);
+
+    try {
+      const result = await businessTool.run(businessIdea);
+
+      setBusinessResult(result);
+
+      setUser((prev) => ({
+        ...prev,
+        tokensUsed: Math.min(prev.tokensUsed + 150, prev.tokensLimit),
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Business Analyzer failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const runWriter = async () => {
     setLoading(true);
 
@@ -269,6 +296,7 @@ ${translateText}`,
           {activeTool === "writer" &&
             "Draft emails, content, and business copy with professional structure."}
           {!activeTool && "Specialized AI Tools"}
+          {activeTool === "strategy" && "Business Strategy Canvas"}
         </h1>
         <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
           {activeTool === "coder" &&
@@ -279,6 +307,8 @@ ${translateText}`,
             "Bridge multi-language assets instantly maintaining exact formatting."}
           {!activeTool &&
             "Launch dedicated micro-utility workstations scaled to your operational pipeline."}
+          {activeTool === "strategy" &&
+            "Analyze market potential, target customers, weaknesses, and revenue opportunities."}
         </p>
       </div>
 
@@ -304,12 +334,14 @@ ${translateText}`,
                   setActiveTool("writer");
                   return;
                 }
-
                 if (tool.id === "lingoflow") {
                   setActiveTool("lingoflow");
                   return;
                 }
-
+                if (tool.id === "strategy") {
+                  setActiveTool("strategy");
+                  return;
+                }
                 onOpenToolChat(toolMap[tool.id]);
               }}
               className={`bg-[#16171f] p-6 rounded-2xl border ${tool.colorClass} flex flex-col justify-between h-56 transition group cursor-pointer relative overflow-hidden`}
@@ -600,6 +632,48 @@ ${translateText}`,
                       Polyglot Translated Output:
                     </span>
                     {translatedResult}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Business Analyzer Active */}
+          {activeTool === "strategy" && (
+            <div className="space-y-6">
+              <div>
+                <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                  Business idea or product concept
+                </label>
+
+                <textarea
+                  rows={5}
+                  value={businessIdea}
+                  onChange={(e) => setBusinessIdea(e.target.value)}
+                  className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none focus:border-purple-600/50 resize-y leading-relaxed"
+                />
+              </div>
+
+              <button
+                onClick={runBusinessAnalyzer}
+                disabled={loading}
+                className="px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
+              >
+                {loading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <TrendingUp className="w-4 h-4" />
+                )}
+                <span>{loading ? "Analyzing..." : "Analyze Business"}</span>
+              </button>
+
+              {businessResult && (
+                <div className="pt-4 border-t border-purple-950/15">
+                  <div className="bg-[#101117] border border-purple-950/20 rounded-xl p-5 text-sm leading-relaxed text-[#c5c6c7] whitespace-pre-line">
+                    <span className="font-bold text-white block mb-3 border-b border-purple-950/10 pb-1.5">
+                      Business Opportunity Report:
+                    </span>
+                    {businessResult}
                   </div>
                 </div>
               )}
