@@ -57,7 +57,8 @@ export default function ToolsTab({
     "Welcome back, Alex. Let's build something beautiful and productive today.",
   );
 
-  const [targetLang, setTargetLang] = useState("Spanish");
+  const translatorTool = useAiTool("translator");
+  const [targetLang, setTargetLang] = useState("Indonesian");
   const [translatedResult, setTranslatedResult] = useState("");
 
   // Tool 4: Writing Assistant state
@@ -200,27 +201,23 @@ export default function ToolsTab({
   // Run Translator
   const runTranslator = async () => {
     setLoading(true);
+
     try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: translateText,
-          targetLanguage: targetLang,
-        }),
-      });
-      const data = await res.json();
-      setTranslatedResult(data.translatedText || "");
+      const result = await translatorTool.run(
+        `Translate to ${targetLang}
+
+${translateText}`,
+      );
+
+      setTranslatedResult(result);
+
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(
-          prev.tokensUsed + (data.simulated ? 50 : 1000),
-          prev.tokensLimit,
-        ),
+        tokensUsed: Math.min(prev.tokensUsed + 120, prev.tokensLimit),
       }));
     } catch (err) {
       console.error(err);
-      alert("Error reaching the LingoFlow Translation node.");
+      alert("Translator failed.");
     } finally {
       setLoading(false);
     }
@@ -307,6 +304,12 @@ export default function ToolsTab({
                   setActiveTool("writer");
                   return;
                 }
+
+                if (tool.id === "lingoflow") {
+                  setActiveTool("lingoflow");
+                  return;
+                }
+
                 onOpenToolChat(toolMap[tool.id]);
               }}
               className={`bg-[#16171f] p-6 rounded-2xl border ${tool.colorClass} flex flex-col justify-between h-56 transition group cursor-pointer relative overflow-hidden`}
