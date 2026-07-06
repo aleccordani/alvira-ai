@@ -14,6 +14,9 @@ import {
   Palette,
 } from "lucide-react";
 import { UserProfile, ChatSession } from "../types";
+import { useEffect, useState } from "react";
+import { dashboardService } from "../modules/dashboard/services/dashboard.service";
+import type { DashboardStats } from "../modules/dashboard/types";
 
 interface DashboardTabProps {
   user: UserProfile;
@@ -32,10 +35,30 @@ export default function DashboardTab({
 }: DashboardTabProps) {
   // Mock data matching screenshots or custom values
   const popularTools = [
-    { id: "lingoflow", name: "LingoFlow", desc: "Polyglot translation suite", icon: <Globe className="w-5 h-5 text-blue-400" /> },
-    { id: "canvas", name: "Canvas AI", desc: "Interactive vector design assistant", icon: <Palette className="w-5 h-5 text-pink-400" /> },
-    { id: "devpilot", name: "DevPilot", desc: "Type-safe structural code engineering", icon: <Code2 className="w-5 h-5 text-emerald-400" /> },
-    { id: "market", name: "Market Predictor", desc: "Analyze telemetry logs & spreadsheets", icon: <Cpu className="w-5 h-5 text-purple-400" /> },
+    {
+      id: "lingoflow",
+      name: "LingoFlow",
+      desc: "Polyglot translation suite",
+      icon: <Globe className="w-5 h-5 text-blue-400" />,
+    },
+    {
+      id: "canvas",
+      name: "Canvas AI",
+      desc: "Interactive vector design assistant",
+      icon: <Palette className="w-5 h-5 text-pink-400" />,
+    },
+    {
+      id: "devpilot",
+      name: "DevPilot",
+      desc: "Type-safe structural code engineering",
+      icon: <Code2 className="w-5 h-5 text-emerald-400" />,
+    },
+    {
+      id: "market",
+      name: "Market Predictor",
+      desc: "Analyze telemetry logs & spreadsheets",
+      icon: <Cpu className="w-5 h-5 text-purple-400" />,
+    },
   ];
 
   const suggestedPrompts = [
@@ -46,17 +69,34 @@ export default function DashboardTab({
   ];
 
   const quotaPercent = Math.round((user.tokensUsed / user.tokensLimit) * 100);
+  const [stats, setStats] = useState<DashboardStats>({
+    conversations: 0,
+    workspaces: 0,
+    documents: 0,
+    aiRequests: 0,
+  });
+
+  useEffect(() => {
+    dashboardService.getStats().then(setStats).catch(console.error);
+  }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#0b0c10] text-[#c5c6c7] p-8 font-sans selection:bg-purple-600 selection:text-white" id="dashboard-tab">
+    <div
+      className="flex-1 overflow-y-auto bg-[#0b0c10] text-[#c5c6c7] p-8 font-sans selection:bg-purple-600 selection:text-white"
+      id="dashboard-tab"
+    >
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">{user.name}</span>
+            Welcome back,{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">
+              {user.name}
+            </span>
           </h1>
           <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
-            You are running on **Alvira Pro** workspace. Let&apos;s automate your tasks today.
+            You are running on **Alvira Pro** workspace. Let&apos;s automate
+            your tasks today.
           </p>
         </div>
 
@@ -81,7 +121,8 @@ export default function DashboardTab({
           </div>
           <h3 className="text-sm font-bold text-white">Ask Anything</h3>
           <p className="text-xs text-[#8b8e99] mt-1 leading-relaxed">
-            Start a custom conversation about marketing briefs, system architectures, or code scripts.
+            Start a custom conversation about marketing briefs, system
+            architectures, or code scripts.
           </p>
           <span className="absolute bottom-5 right-5 text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
             <ArrowRight className="w-4 h-4" />
@@ -104,7 +145,8 @@ export default function DashboardTab({
           </div>
           <h3 className="text-sm font-bold text-white">Summarize Doc</h3>
           <p className="text-xs text-[#8b8e99] mt-1 leading-relaxed">
-            Feed in text logs or technical documentation and receive an instant bulleted, readable digest.
+            Feed in text logs or technical documentation and receive an instant
+            bulleted, readable digest.
           </p>
           <span className="absolute bottom-5 right-5 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
             <ArrowRight className="w-4 h-4" />
@@ -127,7 +169,8 @@ export default function DashboardTab({
           </div>
           <h3 className="text-sm font-bold text-white">Generate Code</h3>
           <p className="text-xs text-[#8b8e99] mt-1 leading-relaxed">
-            Synthesize optimized software components, write API endpoints, or write test files in 30+ languages.
+            Synthesize optimized software components, write API endpoints, or
+            write test files in 30+ languages.
           </p>
           <span className="absolute bottom-5 right-5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
             <ArrowRight className="w-4 h-4" />
@@ -135,12 +178,44 @@ export default function DashboardTab({
         </button>
       </div>
 
+      {/* Live Platform Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-5">
+          <p className="text-xs text-[#8b8e99]">Conversations</p>
+          <h3 className="text-2xl font-extrabold text-white mt-2">
+            {stats.conversations}
+          </h3>
+        </div>
+
+        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-5">
+          <p className="text-xs text-[#8b8e99]">Workspaces</p>
+          <h3 className="text-2xl font-extrabold text-white mt-2">
+            {stats.workspaces}
+          </h3>
+        </div>
+
+        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-5">
+          <p className="text-xs text-[#8b8e99]">Documents</p>
+          <h3 className="text-2xl font-extrabold text-white mt-2">
+            {stats.documents}
+          </h3>
+        </div>
+
+        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-5">
+          <p className="text-xs text-[#8b8e99]">AI Requests</p>
+          <h3 className="text-2xl font-extrabold text-white mt-2">
+            {stats.aiRequests}
+          </h3>
+        </div>
+      </div>
+
       {/* Bento Grid layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Bento Cell 1: Usage stats */}
         <div className="lg:col-span-2 bg-[#16171f] border border-purple-950/15 rounded-2xl p-6">
           <h2 className="text-sm font-bold text-white tracking-tight mb-6 flex items-center gap-2">
-            <Gauge className="w-4 h-4 text-purple-400" /> Resource Allocation Status
+            <Gauge className="w-4 h-4 text-purple-400" /> Resource Allocation
+            Status
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
@@ -170,7 +245,13 @@ export default function DashboardTab({
                     className="transition-all duration-1000 ease-out"
                   />
                   <defs>
-                    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient
+                      id="purpleGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
                       <stop offset="0%" stopColor="#8b5cf6" />
                       <stop offset="100%" stopColor="#6366f1" />
                     </linearGradient>
@@ -180,13 +261,18 @@ export default function DashboardTab({
                   <span className="text-xl font-extrabold text-white leading-none">
                     {quotaPercent}%
                   </span>
-                  <span className="text-[10px] text-[#8b8e99] font-mono mt-1 uppercase">Quota Used</span>
+                  <span className="text-[10px] text-[#8b8e99] font-mono mt-1 uppercase">
+                    Quota Used
+                  </span>
                 </div>
               </div>
               <p className="text-xs font-semibold text-white mt-4">
-                {(user.tokensUsed / 1000).toFixed(0)}k / {(user.tokensLimit / 1000000).toFixed(1)}M Tokens
+                {(user.tokensUsed / 1000).toFixed(0)}k /{" "}
+                {(user.tokensLimit / 1000000).toFixed(1)}M Tokens
               </p>
-              <p className="text-[10px] text-[#8b8e99] mt-1 font-light">Renews on July 24, 2026</p>
+              <p className="text-[10px] text-[#8b8e99] mt-1 font-light">
+                Renews on July 24, 2026
+              </p>
             </div>
 
             {/* Time Saved Meter */}
@@ -194,8 +280,12 @@ export default function DashboardTab({
               <div className="p-3 bg-indigo-950/30 rounded-xl text-indigo-400 mb-3">
                 <Clock className="w-6 h-6" />
               </div>
-              <span className="text-2xl font-extrabold text-white tracking-tight">14.2 hrs</span>
-              <span className="text-xs text-[#8b8e99] mt-1">Operational Time Saved</span>
+              <span className="text-2xl font-extrabold text-white tracking-tight">
+                14.2 hrs
+              </span>
+              <span className="text-xs text-[#8b8e99] mt-1">
+                Operational Time Saved
+              </span>
               <div className="mt-2 text-[10px] text-emerald-400 font-mono flex items-center gap-0.5">
                 <TrendingUp className="w-3 h-3" /> +12% this week
               </div>
@@ -206,9 +296,15 @@ export default function DashboardTab({
               <div className="p-3 bg-emerald-950/30 rounded-xl text-emerald-400 mb-3">
                 <Cpu className="w-6 h-6" />
               </div>
-              <span className="text-2xl font-extrabold text-white tracking-tight">85 / 15</span>
-              <span className="text-xs text-[#8b8e99] mt-1">Pro vs Standard Calls</span>
-              <p className="text-[10px] text-[#8b8e99] mt-2 font-light">Focusing on high-end reasoning</p>
+              <span className="text-2xl font-extrabold text-white tracking-tight">
+                85 / 15
+              </span>
+              <span className="text-xs text-[#8b8e99] mt-1">
+                Pro vs Standard Calls
+              </span>
+              <p className="text-[10px] text-[#8b8e99] mt-2 font-light">
+                Focusing on high-end reasoning
+              </p>
             </div>
           </div>
         </div>
@@ -218,7 +314,10 @@ export default function DashboardTab({
           <div>
             <h2 className="text-sm font-bold text-white tracking-tight mb-4 flex items-center justify-between">
               <span>Recent Conversations</span>
-              <button onClick={() => onNavigateToTab("chat")} className="text-xs text-purple-400 hover:text-purple-300 font-medium">
+              <button
+                onClick={() => onNavigateToTab("chat")}
+                className="text-xs text-purple-400 hover:text-purple-300 font-medium"
+              >
                 View All
               </button>
             </h2>
@@ -245,14 +344,18 @@ export default function DashboardTab({
           </div>
 
           <div className="pt-4 border-t border-purple-950/10 mt-4 text-center">
-            <span className="text-[10px] text-[#8b8e99] font-light">Conversations are synced and persistent locally</span>
+            <span className="text-[10px] text-[#8b8e99] font-light">
+              Conversations are synced and persistent locally
+            </span>
           </div>
         </div>
       </div>
 
       {/* Popular AI Tools Grid */}
       <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-6 mb-8">
-        <h2 className="text-sm font-bold text-white tracking-tight mb-5">Popular AI Tools Workspace</h2>
+        <h2 className="text-sm font-bold text-white tracking-tight mb-5">
+          Popular AI Tools Workspace
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {popularTools.map((tool) => (
             <div
@@ -294,7 +397,9 @@ export default function DashboardTab({
               onClick={() => onPreFillPrompt(prompt)}
               className="text-left p-3.5 bg-[#101117]/80 hover:bg-[#161720] rounded-xl border border-purple-950/10 text-xs font-medium text-[#c5c6c7] hover:text-white hover:border-purple-800/20 transition flex items-center justify-between group"
             >
-              <span className="truncate pr-4 max-w-xs md:max-w-md">{prompt}</span>
+              <span className="truncate pr-4 max-w-xs md:max-w-md">
+                {prompt}
+              </span>
               <ArrowRight className="w-3.5 h-3.5 text-[#8b8e99] group-hover:translate-x-0.5 group-hover:text-purple-400 transition-all shrink-0" />
             </button>
           ))}
