@@ -43,6 +43,7 @@ export default function ToolsTab({
   const [codeLang, setCodeLang] = useState<CodeLanguage>("typescript");
   const [codeResult, setCodeResult] = useState<ExplainCodeResult | null>(null);
   const [codeError, setCodeError] = useState("");
+  const codeTool = useAiTool("code-explainer");
 
   // Tool 2: Summarizer state
   const [summarizerText, setSummarizerText] = useState(
@@ -151,23 +152,31 @@ export default function ToolsTab({
     setCodeResult(null);
 
     try {
-      let streamedText = "";
+      const result = await codeTool.run(
+        `Language: ${codeLang}
 
-      await streamCodeExplanation(codeLang, codeInput, (chunk) => {
-        streamedText += chunk;
+${codeInput}`,
+      );
 
-        setCodeResult({
-          summary: streamedText,
-          explanation: [
-            {
-              title: "Streaming Analysis",
-              content: streamedText,
-            },
-          ],
-          complexity: "Streaming...",
-          bestPractices: [],
-          suggestions: [],
-        });
+      setCodeResult({
+        summary: result,
+        explanation: [
+          {
+            title: "Neural Code Studio Analysis",
+            content: result,
+          },
+        ],
+        complexity: "See analysis report",
+        bestPractices: [
+          "Use clear naming",
+          "Keep functions focused",
+          "Add validation where needed",
+        ],
+        suggestions: [
+          "Improve readability",
+          "Add error handling",
+          "Consider unit tests",
+        ],
       });
 
       setUser((prev) => ({
@@ -176,7 +185,7 @@ export default function ToolsTab({
       }));
     } catch (err) {
       console.error(err);
-      setCodeError("Failed to stream code explanation. Please try again.");
+      setCodeError("Failed to analyze code. Please try again.");
     } finally {
       setLoading(false);
     }

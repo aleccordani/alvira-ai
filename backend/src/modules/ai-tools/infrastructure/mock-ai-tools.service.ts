@@ -7,62 +7,35 @@ export class MockAiToolsService implements AiToolsProvider {
 
     switch (tool) {
       case "cv-reviewer":
-        return {
-          tool,
-          result: this.reviewCv(cleanInput),
-        };
+        return { tool, result: this.reviewCv(cleanInput) };
 
       case "code-explainer":
-        return {
-          tool,
-          result: this.explainCode(cleanInput),
-        };
+        return { tool, result: this.explainCode(cleanInput) };
 
       case "email-writer":
-        return {
-          tool,
-          result: this.writeEmail(cleanInput),
-        };
+        return { tool, result: this.writeEmail(cleanInput) };
 
       case "content-generator":
-        return {
-          tool,
-          result: this.generateContent(cleanInput),
-        };
+        return { tool, result: this.generateContent(cleanInput) };
 
       case "business-idea-generator":
-        return {
-          tool,
-          result: this.generateBusinessIdea(cleanInput),
-        };
+        return { tool, result: this.generateBusinessIdea(cleanInput) };
 
       case "summarizer":
-        return {
-          tool,
-          result: this.summarize(cleanInput),
-        };
+        return { tool, result: this.summarize(cleanInput) };
 
       case "translator":
-        return {
-          tool,
-          result: this.translate(cleanInput),
-        };
+        return { tool, result: this.translate(cleanInput) };
 
       case "business-analyzer":
-        return {
-          tool,
-          result: this.analyzeBusiness(cleanInput),
-        };
+        return { tool, result: this.analyzeBusiness(cleanInput) };
 
       default:
-        return {
-          tool,
-          result: "Tool is not supported yet.",
-        };
+        return { tool, result: "Tool is not supported yet." };
     }
   }
 
-  private reviewCv(input: string) {
+  private reviewCv(input: string): string {
     return `CV Review Result
 
 Strengths:
@@ -83,29 +56,36 @@ Input reviewed:
 ${input}`;
   }
 
-  private explainCode(input: string) {
-    return `Code Explanation
+  private explainCode(input: string): string {
+    return `Neural Code Studio Report
 
-Overview:
-This code is being analyzed in Mock Mode.
+Overview
+The submitted code has been analyzed successfully.
 
-What it does:
-- Reads the provided code or technical input.
-- Identifies the main logic.
-- Explains the purpose in simple terms.
-- Highlights possible improvements.
+Potential Issues
+• Variable names could be more descriptive.
+• Missing validation or error handling.
+• Consider extracting repeated logic.
+• Add comments only where business logic is complex.
 
-Suggestion:
-- Check naming consistency.
-- Keep functions small and focused.
-- Add error handling where needed.
-- Add comments only for complex logic.
+Suggestions
+✓ Use smaller functions.
+✓ Follow consistent naming.
+✓ Remove duplicated code.
+✓ Improve formatting.
+✓ Add unit tests.
 
-Code/input reviewed:
-${input}`;
+Estimated Complexity
+Time Complexity: O(n)
+Space Complexity: O(1)
+
+Submitted Code
+${input}
+
+Analysis completed successfully in Mock AI Mode.`;
   }
 
-  private writeEmail(input: string) {
+  private writeEmail(input: string): string {
     return `Generated Email
 
 Subject: Follow Up
@@ -125,7 +105,7 @@ Thank you.
 Best regards,`;
   }
 
-  private generateContent(input: string) {
+  private generateContent(input: string): string {
     return `Generated Content
 
 Title:
@@ -141,7 +121,7 @@ Key Points:
 - Direct call to action`;
   }
 
-  private generateBusinessIdea(input: string) {
+  private generateBusinessIdea(input: string): string {
     return `Business Idea
 
 Idea:
