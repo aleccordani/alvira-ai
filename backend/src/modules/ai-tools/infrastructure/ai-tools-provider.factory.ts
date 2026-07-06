@@ -2,9 +2,11 @@ import { MockAiToolsService } from "./mock-ai-tools.service.js";
 import { OpenAiToolsService } from "./openai-ai-tools.service.js";
 
 export function createAiToolsProvider() {
-  if (process.env.AI_MOCK === "true") {
-    return new MockAiToolsService();
-  }
+  const isMockMode = process.env.AI_MOCK === "true";
+  const hasOpenAiKey = Boolean(process.env.OPENAI_API_KEY);
 
-  return new OpenAiToolsService();
+  if (!isMockMode && hasOpenAiKey) {
+    return new OpenAiToolsService();
+  }
+  return new MockAiToolsService();
 }
