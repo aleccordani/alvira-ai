@@ -30,6 +30,9 @@ export class MockAiToolsService implements AiToolsProvider {
       case "business-analyzer":
         return { tool, result: this.analyzeBusiness(cleanInput) };
 
+      case "image-prompter":
+        return { tool, result: this.generateImagePrompt(cleanInput) };
+
       default:
         return { tool, result: "Tool is not supported yet." };
     }
@@ -207,5 +210,33 @@ Revenue Streams
 
 Recommendation
 Proceed with an MVP and validate demand through early adopters before investing heavily.`;
+  }
+
+  private generateImagePrompt(input: string): string {
+    return `AI Image Prompt Studio
+
+Main Prompt:
+${input}, ultra detailed, professional composition, cinematic lighting, high contrast, sharp focus, premium visual style, modern design, 8k quality
+
+Style:
+Modern, polished, high-end, visually striking
+
+Lighting:
+Cinematic soft lighting with subtle glow and depth
+
+Camera:
+Three-quarter perspective, balanced framing, clean composition
+
+Negative Prompt:
+low quality, blurry, distorted, bad anatomy, messy layout, extra objects, unreadable text, watermark, oversaturated, noisy image
+
+Recommended Platforms:
+- Midjourney
+- DALL·E
+- Stable Diffusion
+- Leonardo AI
+
+Prompt Tip:
+Use this prompt as a base, then add aspect ratio, style reference, and brand colors depending on your target platform.`;
   }
 }

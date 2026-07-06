@@ -86,7 +86,12 @@ ${summary || "No memory yet."}`,
 
     let updatedConversation = conversation;
 
-    if (conversation.title === "New Chat") {
+    const shouldAutoRename =
+      !conversation.title ||
+      conversation.title === "New Chat" ||
+      conversation.title === "terbaru";
+
+    if (shouldAutoRename) {
       const title = this.aiService.generateTitle(data.content);
 
       updatedConversation = await this.conversationRepository.update({

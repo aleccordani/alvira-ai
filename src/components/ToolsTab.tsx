@@ -76,6 +76,13 @@ export default function ToolsTab({
   const [businessResult, setBusinessResult] = useState("");
   const businessTool = useAiTool("business-analyzer");
 
+  // Tool 6: Image Prompter state
+  const [imagePromptInput, setImagePromptInput] = useState(
+    "Futuristic AI SaaS dashboard with dark theme, glowing purple and blue accents, analytics charts, modern UI, 3D perspective",
+  );
+  const [imagePromptResult, setImagePromptResult] = useState("");
+  const imagePrompterTool = useAiTool("image-prompter");
+
   const toolsList = [
     {
       id: "coder",
@@ -259,6 +266,26 @@ ${translateText}`,
     }
   };
 
+  const runImagePrompter = async () => {
+    setLoading(true);
+
+    try {
+      const result = await imagePrompterTool.run(imagePromptInput);
+
+      setImagePromptResult(result);
+
+      setUser((prev) => ({
+        ...prev,
+        tokensUsed: Math.min(prev.tokensUsed + 120, prev.tokensLimit),
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Image Prompter failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const runWriter = async () => {
     setLoading(true);
 
@@ -305,6 +332,7 @@ ${translateText}`,
           {activeTool === "writer" &&
             "Draft emails, content, and business copy with professional structure."}
           {!activeTool && "Specialized AI Tools"}
+          {activeTool === "prompter" && "AI Image Prompt Studio"}
           {activeTool === "strategy" && "Business Strategy Canvas"}
         </h1>
         <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
@@ -318,6 +346,8 @@ ${translateText}`,
             "Launch dedicated micro-utility workstations scaled to your operational pipeline."}
           {activeTool === "strategy" &&
             "Analyze market potential, target customers, weaknesses, and revenue opportunities."}
+          {activeTool === "prompter" &&
+            "Create detailed prompts for Midjourney, DALL·E, Stable Diffusion, and other image models."}
         </p>
       </div>
 
@@ -333,14 +363,16 @@ ${translateText}`,
                   setActiveTool("coder");
                   return;
                 }
-
                 if (tool.id === "summarizer") {
                   setActiveTool("summarizer");
                   return;
                 }
-
                 if (tool.id === "writer") {
                   setActiveTool("writer");
+                  return;
+                }
+                if (tool.id === "prompter") {
+                  setActiveTool("prompter");
                   return;
                 }
                 if (tool.id === "lingoflow") {
@@ -373,7 +405,7 @@ ${translateText}`,
               </div>
 
               <div className="flex items-center gap-1 text-[10px] font-bold text-purple-400 group-hover:text-purple-300 transition-all">
-                <span>{tool.idMock ? "Request Access" : "Open Workspace"}</span>
+                <span>Open Workspace →</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -683,6 +715,50 @@ ${translateText}`,
                       Business Opportunity Report:
                     </span>
                     {businessResult}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Image Prompter Active */}
+          {activeTool === "prompter" && (
+            <div className="space-y-6">
+              <div>
+                <label className="text-xs text-[#8b8e99] block mb-2 font-semibold">
+                  Describe the image you want to create
+                </label>
+
+                <textarea
+                  rows={6}
+                  value={imagePromptInput}
+                  onChange={(e) => setImagePromptInput(e.target.value)}
+                  className="w-full bg-[#101117] border border-purple-950/40 rounded-xl p-4 text-xs text-white outline-none focus:border-purple-600/50 resize-y leading-relaxed"
+                />
+              </div>
+
+              <button
+                onClick={runImagePrompter}
+                disabled={loading}
+                className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
+              >
+                {loading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ImageIcon className="w-4 h-4" />
+                )}
+                <span>
+                  {loading ? "Generating..." : "Generate Image Prompt"}
+                </span>
+              </button>
+
+              {imagePromptResult && (
+                <div className="pt-4 border-t border-purple-950/15">
+                  <div className="bg-[#101117] border border-purple-950/20 rounded-xl p-5 text-sm leading-relaxed text-[#c5c6c7] whitespace-pre-line">
+                    <span className="font-bold text-white block mb-3 border-b border-purple-950/10 pb-1.5">
+                      Generated Image Prompt:
+                    </span>
+                    {imagePromptResult}
                   </div>
                 </div>
               )}

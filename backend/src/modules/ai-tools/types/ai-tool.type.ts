@@ -6,7 +6,8 @@ export type AiToolType =
   | "business-idea-generator"
   | "summarizer"
   | "translator"
-  | "business-analyzer";
+  | "business-analyzer"
+  | "image-prompter";
 
 export interface RunAiToolRequest {
   tool: AiToolType;

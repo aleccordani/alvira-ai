@@ -310,43 +310,38 @@ export default function DashboardTab({
         </div>
 
         {/* Bento Cell 2: Recent Conversations */}
-        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-6 flex flex-col justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-white tracking-tight mb-4 flex items-center justify-between">
-              <span>Recent Conversations</span>
+        {/* Bento Cell 2: Recent Conversations */}
+        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-6 flex flex-col">
+          <h2 className="text-sm font-bold text-white tracking-tight mb-4">
+            Recent Conversations
+          </h2>
+
+          <div className="space-y-3">
+            {recentChats.slice(0, 3).map((chat) => (
               <button
-                onClick={() => onNavigateToTab("chat")}
-                className="text-xs text-purple-400 hover:text-purple-300 font-medium"
+                key={chat.id}
+                onClick={() => onSelectChat(chat.id)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-[#101117] hover:bg-[#1b1d27] border border-purple-950/10 transition-colors text-left"
               >
-                View All
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-white truncate">
+                    {chat.title || "Untitled conversation"}
+                  </p>
+
+                  <p className="text-xs text-[#8b8e99] mt-1">
+                    Open conversation
+                  </p>
+                </div>
+
+                <span className="text-[#8b8e99]">›</span>
               </button>
-            </h2>
+            ))}
 
-            <div className="space-y-3">
-              {recentChats.map((chat) => (
-                <button
-                  key={chat.id}
-                  onClick={() => onSelectChat(chat.id)}
-                  className="w-full p-3 bg-[#101117] hover:bg-[#1c1d29] rounded-xl border border-purple-950/10 flex items-center justify-between group text-left transition"
-                >
-                  <div className="truncate pr-4 flex-1">
-                    <span className="text-xs font-bold text-white block truncate leading-tight group-hover:text-purple-300 transition-colors">
-                      {chat.title}
-                    </span>
-                    <span className="text-[10px] text-[#8b8e99] block mt-1 truncate max-w-xs font-light">
-                      {chat.lastMessage}
-                    </span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-[#8b8e99] group-hover:text-white transition-colors shrink-0" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-purple-950/10 mt-4 text-center">
-            <span className="text-[10px] text-[#8b8e99] font-light">
-              Conversations are synced and persistent locally
-            </span>
+            {recentChats.length === 0 && (
+              <div className="p-4 rounded-xl bg-[#101117] border border-purple-950/10 text-sm text-[#8b8e99]">
+                No conversations yet.
+              </div>
+            )}
           </div>
         </div>
       </div>
