@@ -52,6 +52,9 @@ export class AuthService {
       throw new Error("Invalid email or password");
     }
 
+    if (!user.password) {
+      throw new Error("Please login using your OAuth provider");
+    }
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordValid) {
