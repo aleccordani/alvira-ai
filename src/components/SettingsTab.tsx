@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "sonner";
 import {
   User,
   Shield,
@@ -46,15 +47,13 @@ export default function SettingsTab({ user, setUser }: SettingsTabProps) {
       email: profileEmail,
       bio: profileBio,
     }));
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    toast.success("AI preferences updated successfully.");
   };
 
   const handleToggleTheme = (themeMode: "light" | "dark" | "system") => {
     setUser((prev) => ({ ...prev, theme: themeMode }));
 
     const root = document.documentElement;
-    const bodyContainer = document.getElementById("landing-container");
 
     if (themeMode === "dark") {
       root.classList.add("dark");
@@ -75,7 +74,6 @@ export default function SettingsTab({ user, setUser }: SettingsTabProps) {
   const menuItems = [
     { id: "profile", label: "Personal Information", icon: <User className="w-4 h-4" /> },
     { id: "sessions", label: "Active Sessions", icon: <Shield className="w-4 h-4" /> },
-    { id: "appearance", label: "Appearance Preferences", icon: <Eye className="w-4 h-4" /> },
     { id: "ai", label: "AI Model Customization", icon: <BrainCircuit className="w-4 h-4" /> },
   ];
 
@@ -128,7 +126,7 @@ export default function SettingsTab({ user, setUser }: SettingsTabProps) {
                 <div>
                   <button
                     type="button"
-                    onClick={() => alert("Avatar modification requires Alvira-Enterprise SSO configuration.")}
+                    onClick={() => toast.info("Avatar upload is not available in this MVP yet.")}
                     className="px-3.5 py-1.5 bg-[#101117] border border-purple-950/40 rounded-lg text-xs font-semibold hover:bg-purple-950/20 text-white transition-colors"
                   >
                     Change Picture
@@ -228,70 +226,7 @@ export default function SettingsTab({ user, setUser }: SettingsTabProps) {
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Appearance Tab */}
-          {activeSubTab === "appearance" && (
-            <div className="space-y-6">
-              <h2 className="text-base font-bold text-white border-b border-purple-950/10 pb-2">Appearance Customization</h2>
-              <p className="text-xs text-[#8b8e99] font-light leading-relaxed">
-                Choose a visual theme fitting your lighting preferences. Alvira utilizes fluid Tailwind variables supporting both high-contrast light and absolute twilight dark states.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Dark Mode option */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleTheme("dark")}
-                  className={`p-5 rounded-2xl border text-left flex flex-col justify-between h-36 transition-all ${
-                    user.theme === "dark"
-                      ? "bg-purple-950/10 border-purple-500 text-white"
-                      : "bg-[#101117] border-purple-950/30 text-[#8b8e99] hover:text-white hover:border-purple-950/50"
-                  }`}
-                >
-                  <Moon className="w-5 h-5" />
-                  <div>
-                    <span className="text-xs font-bold block">Twilight Dark</span>
-                    <span className="text-[9px] block mt-1 font-light">Eye-strain reducer (Default)</span>
-                  </div>
-                </button>
-
-                {/* Light Mode option */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleTheme("light")}
-                  className={`p-5 rounded-2xl border text-left flex flex-col justify-between h-36 transition-all ${
-                    user.theme === "light"
-                      ? "bg-purple-100 border-purple-600 text-purple-950 shadow"
-                      : "bg-[#101117] border-purple-950/30 text-[#8b8e99] hover:text-white hover:border-purple-950/50"
-                  }`}
-                >
-                  <Sun className="w-5 h-5 text-amber-500" />
-                  <div>
-                    <span className="text-xs font-bold block">Paper Light</span>
-                    <span className="text-[9px] block mt-1 font-light">Crisp, readable high-contrast</span>
-                  </div>
-                </button>
-
-                {/* System Mode option */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleTheme("system")}
-                  className={`p-5 rounded-2xl border text-left flex flex-col justify-between h-36 transition-all ${
-                    user.theme === "system"
-                      ? "bg-purple-950/10 border-purple-500 text-white"
-                      : "bg-[#101117] border-purple-950/30 text-[#8b8e99] hover:text-white hover:border-purple-950/50"
-                  }`}
-                >
-                  <Laptop className="w-5 h-5" />
-                  <div>
-                    <span className="text-xs font-bold block">Match System</span>
-                    <span className="text-[9px] block mt-1 font-light">Follow OS settings</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
+          )}       
 
           {/* AI Settings Tab */}
           {activeSubTab === "ai" && (
@@ -322,8 +257,7 @@ export default function SettingsTab({ user, setUser }: SettingsTabProps) {
               <button
                 type="button"
                 onClick={() => {
-                  setSaveSuccess(true);
-                  setTimeout(() => setSaveSuccess(false), 2500);
+                  toast.success("Profile updated successfully.");
                 }}
                 className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 hover:opacity-95 shadow transition-all"
               >

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Code2,
   BookOpen,
@@ -6,13 +7,13 @@ import {
   PenTool,
   Image as ImageIcon,
   TrendingUp,
-  Cpu,
   Sparkles,
   ArrowRight,
   RefreshCw,
   Copy,
   Check,
   ChevronLeft,
+  Trash2,
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { AiTool } from "../services/chat";
@@ -20,6 +21,15 @@ import { explainCode, CodeLanguage, ExplainCodeResult } from "../services/code";
 import CodeEditor from "./code/CodeEditor";
 import { streamCodeExplanation } from "../services/code-stream";
 import { useAiTool } from "../modules/ai-tools";
+import { imageGenerationService } from "../modules/image-generation";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import {
+  SectionCard,
+  EmptyState,
+  LoadingSkeleton,
+  ActionButton,
+} from "../shared/ui";
 
 interface ToolsTabProps {
   user: UserProfile;
@@ -35,6 +45,28 @@ export default function ToolsTab({
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [copiedImagePrompt, setCopiedImagePrompt] = useState(false);
+
+  const { data: imageHistory = [], refetch: refetchImageHistory } = useQuery({
+    queryKey: ["image-history"],
+    queryFn: imageGenerationService.getHistory,
+    enabled: !!user,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: imageGenerationService.delete,
+
+    onSuccess: async () => {
+      toast.success("Image deleted");
+      await refetchImageHistory();
+    },
+
+    onError: () => {
+      toast.error("Failed to delete image");
+    },
+  });
 
   // Tool 1: Code Studio state
   const [codeInput, setCodeInput] = useState(
@@ -268,22 +300,49 @@ ${translateText}`,
 
   const runImagePrompter = async () => {
     setLoading(true);
+    setImageError("");
 
     try {
-      const result = await imagePrompterTool.run(imagePromptInput);
+      const promptResult = await imagePrompterTool.run(imagePromptInput);
+      setImagePromptResult(promptResult);
 
-      setImagePromptResult(result);
+      const imageResult = await imageGenerationService.generate({
+        prompt: promptResult,
+      });
+
+      setGeneratedImageUrl(imageResult.image);
+
+      await refetchImageHistory();
+      toast.success("Image generated successfully!");
 
       setUser((prev) => ({
         ...prev,
-        tokensUsed: Math.min(prev.tokensUsed + 120, prev.tokensLimit),
+        tokensUsed: Math.min(prev.tokensUsed + 250, prev.tokensLimit),
       }));
     } catch (err) {
       console.error(err);
-      alert("Image Prompter failed.");
+      setImageError("Image generation failed. Please try again.");
+      toast.error("Failed to generate image.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyImagePrompt = async () => {
+    await navigator.clipboard.writeText(imagePromptResult || imagePromptInput);
+    toast.success("Prompt copied!");
+    setCopiedImagePrompt(true);
+    setTimeout(() => setCopiedImagePrompt(false), 2000);
+  };
+
+  const downloadGeneratedImage = () => {
+    if (!generatedImageUrl) return;
+
+    const link = document.createElement("a");
+    link.href = generatedImageUrl;
+    link.download = "alvira-generated-image.png";
+    link.target = "_blank";
+    link.click();
   };
 
   const runWriter = async () => {
@@ -737,9 +796,15 @@ ${translateText}`,
                 />
               </div>
 
+              {imageError && (
+                <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+                  {imageError}
+                </div>
+              )}
+
               <button
                 onClick={runImagePrompter}
-                disabled={loading}
+                disabled={loading || !imagePromptInput.trim()}
                 className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-30 shadow"
               >
                 {loading ? (
@@ -748,19 +813,128 @@ ${translateText}`,
                   <ImageIcon className="w-4 h-4" />
                 )}
                 <span>
-                  {loading ? "Generating..." : "Generate Image Prompt"}
+                  {loading ? "Generating image..." : "Generate Image"}
                 </span>
               </button>
 
+              {loading && (
+                <div className="rounded-2xl border border-purple-950/30 bg-[#101117] p-5 text-xs text-[#8b8e99]">
+                  ALVIRA is enhancing your prompt and generating the image
+                  preview...
+                </div>
+              )}
+
               {imagePromptResult && (
-                <div className="pt-4 border-t border-purple-950/15">
-                  <div className="bg-[#101117] border border-purple-950/20 rounded-xl p-5 text-sm leading-relaxed text-[#c5c6c7] whitespace-pre-line">
-                    <span className="font-bold text-white block mb-3 border-b border-purple-950/10 pb-1.5">
-                      Generated Image Prompt:
-                    </span>
+                <div className="rounded-2xl border border-purple-950/30 bg-[#101117] p-6">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <h3 className="font-bold text-white">
+                      Generated Image Prompt
+                    </h3>
+
+                    <button
+                      onClick={copyImagePrompt}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#16171f] border border-purple-950/30 text-xs text-white hover:border-purple-600/50"
+                    >
+                      {copiedImagePrompt ? (
+                        <Check className="w-4 h-4 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                      {copiedImagePrompt ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+
+                  <pre className="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed">
                     {imagePromptResult}
+                  </pre>
+                </div>
+              )}
+
+              {generatedImageUrl && (
+                <div className="rounded-2xl border border-purple-950/30 bg-[#101117] p-6">
+                  <span className="font-bold text-white block mb-4">
+                    Generated Image Preview
+                  </span>
+
+                  <img
+                    src={generatedImageUrl}
+                    alt="Generated preview"
+                    className="w-full max-w-xl rounded-2xl border border-purple-950/30 shadow"
+                  />
+
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <a
+                      href={generatedImageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:opacity-90"
+                    >
+                      Open Image
+                    </a>
+
+                    <button
+                      onClick={downloadGeneratedImage}
+                      className="inline-flex px-4 py-2 rounded-xl bg-[#16171f] border border-purple-950/30 text-white text-xs font-bold hover:border-purple-600/50"
+                    >
+                      Download
+                    </button>
+
+                    <button
+                      onClick={runImagePrompter}
+                      disabled={loading}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#16171f] border border-purple-950/30 text-white text-xs font-bold hover:border-purple-600/50 disabled:opacity-30"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Regenerate
+                    </button>
                   </div>
                 </div>
+              )}
+
+              {imageHistory.length > 0 && (
+                <SectionCard className="p-6">
+                  <h3 className="font-bold text-white mb-4">
+                    Recent Generations
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {imageHistory.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-purple-950/20 bg-[#16171f] p-3"
+                      >
+                        <img
+                          src={item.imageUrl}
+                          alt="Image history preview"
+                          className="w-full h-40 object-cover rounded-lg border border-purple-950/20"
+                        />
+
+                        <p className="text-[10px] text-[#8b8e99] mt-3">
+                          {formatDistanceToNow(new Date(item.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </p>
+
+                        <p className="text-xs text-[#c5c6c7] mt-2 line-clamp-3">
+                          {item.prompt}
+                        </p>
+
+                        <button
+                          onClick={() => {
+                            if (confirm("Delete this image from history?")) {
+                              deleteMutation.mutate(item.id);
+                            }
+                          }}
+                          disabled={deleteMutation.isPending}
+                          className="mt-3 flex items-center justify-center w-9 h-9 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+                          title="Delete image"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
               )}
             </div>
           )}

@@ -16,13 +16,13 @@ export default function WorkspaceSidebar({
   onCreateWorkspace,
 }: WorkspaceSidebarProps) {
   return (
-    <aside className="w-72 border-r border-gray-200 bg-white p-4">
+    <aside className="w-72 border-r border-purple-950/25 bg-[#0d0e14] p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Workspace</h2>
+        <h2 className="text-lg font-bold text-white">Workspace</h2>
 
         <button
           onClick={onCreateWorkspace}
-          className="rounded-lg bg-black px-3 py-1.5 text-sm text-white"
+          className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
         >
           + New
         </button>
@@ -30,11 +30,11 @@ export default function WorkspaceSidebar({
 
       <div className="mt-4 space-y-2">
         {loading && (
-          <p className="text-sm text-gray-500">Loading workspaces...</p>
+          <p className="text-sm text-[#8b8e99]">Loading workspaces...</p>
         )}
 
         {!loading && workspaces.length === 0 && (
-          <p className="text-sm text-gray-500">No workspace yet.</p>
+          <p className="text-sm text-[#8b8e99]">No workspace yet.</p>
         )}
 
         {workspaces.map((workspace) => {
@@ -46,14 +46,14 @@ export default function WorkspaceSidebar({
               onClick={() => onSelectWorkspace(workspace)}
               className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${
                 isActive
-                  ? "border-purple-500 bg-purple-50 text-purple-700"
-                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  ? "border-purple-500/40 bg-purple-950/30 text-white"
+                  : "border-purple-950/20 bg-[#16171f] text-[#c5c6c7] hover:bg-[#1a1c27]"
               }`}
             >
-              <div className="font-medium">{workspace.name}</div>
+              <div className="font-semibold">{workspace.name}</div>
 
               {workspace.description && (
-                <div className="mt-1 line-clamp-2 text-xs text-gray-500">
+                <div className="mt-1 line-clamp-2 text-xs text-[#8b8e99]">
                   {workspace.description}
                 </div>
               )}

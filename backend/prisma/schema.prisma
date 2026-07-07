@@ -22,6 +22,13 @@ enum PlanType {
   BUSINESS
 }
 
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  GITHUB
+  APPLE
+}
+
 model Plan {
   id         String   @id @default(uuid())
   name       String
@@ -37,21 +44,36 @@ model Plan {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  planId    String?
-  avatar    String?
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String?
+
+  role   UserRole   @default(USER)
+  status UserStatus @default(ACTIVE)
+
+  provider   AuthProvider @default(LOCAL)
+  providerId String?
+
+  planId String?
+  avatar String?
+  bio    String?
+
+  tokensUsed    Int @default(0)
+  storageUsed   Int @default(0)
+  imageUsed     Int @default(0)
+  workspaceUsed Int @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   plan Plan? @relation(fields: [planId], references: [id])
 
-  conversations Conversation[]
-  usageLogs     UsageLog[]
-  documents     Document[]
-  workspaces    Workspace[]
+  conversations   Conversation[]
+  usageLogs       UsageLog[]
+  documents       Document[]
+  workspaces      Workspace[]
+  generatedImages GeneratedImage[]
 
   @@map("users")
 }
@@ -137,7 +159,7 @@ model Workspace {
 
   user User @relation(fields: [userId], references: [id])
 
-  files WorkspaceFile[]
+  files  WorkspaceFile[]
   chunks WorkspaceChunk[]
 
   createdAt DateTime @default(now())
@@ -156,26 +178,40 @@ model WorkspaceFile {
   workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   chunks WorkspaceChunk[]
-  
+
   createdAt DateTime @default(now())
 }
 
 model WorkspaceChunk {
-  id              String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  workspaceId      String
-  workspaceFileId  String
+  workspaceId     String
+  workspaceFileId String
 
-  content          String
-  embedding        Json
+  content   String
+  embedding Json
 
-  chunkIndex       Int
+  chunkIndex Int
 
-  createdAt        DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workspaceFile    WorkspaceFile @relation(fields: [workspaceFileId], references: [id], onDelete: Cascade)
+  workspace     Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceFile WorkspaceFile @relation(fields: [workspaceFileId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([workspaceFileId])
+}
+
+model GeneratedImage {
+  id String @id @default(cuid())
+
+  userId String
+
+  prompt String
+
+  imageUrl String @db.Text
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

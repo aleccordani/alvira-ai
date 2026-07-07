@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Image, Mic, Sparkles, Bot, X, Paperclip } from "lucide-react";
+import { Send, Image, Sparkles, Bot, X, Paperclip } from "lucide-react";
 import { ChatMessage, ChatSession, UserProfile } from "../types";
 import { streamChat, type AiTool } from "../services/chat";
 import { uploadPdfToConversation } from "../services/file";
 import ChatMessageItem from "./chat/ChatMessageItem";
 import ChatLoading from "./chat/ChatLoading";
+import { toast } from "sonner";
 
 interface ChatTabProps {
   user: UserProfile;
@@ -76,7 +77,6 @@ export default function ChatTab({
   } | null>(null);
   const [attachedFileName, setAttachedFileName] = useState("");
   const [attachedPdf, setAttachedPdf] = useState<File | null>(null);
-
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -136,29 +136,6 @@ export default function ChatTab({
     }
   };
 
-  const handlePdfUpload = async (file: File) => {
-    if (!activeSession) {
-      alert("Please create a new chat first.");
-      return;
-    }
-
-    try {
-      setUploadingFile(true);
-
-      await uploadPdfToConversation(activeSession.id, file);
-
-      alert(
-        `${file.name} uploaded successfully. You can now ask about this PDF.`,
-      );
-      await onRefreshConversations();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to upload PDF.");
-    } finally {
-      setUploadingFile(false);
-    }
-  };
-
   const handleSend = async (messageText = inputVal) => {
     const finalMessageText =
       messageText.trim() ||
@@ -169,7 +146,7 @@ export default function ChatTab({
     if (!finalMessageText.trim() && !attachedImage && !attachedPdf) return;
 
     if (!activeSession) {
-      alert("Please create a new chat first.");
+      toast.error("Failed to create new chat.");
       return;
     }
 
@@ -185,7 +162,7 @@ export default function ChatTab({
 
     setInputVal("");
     removeAttachment();
-    setLoading(false);
+    setLoading(true);
 
     let streamedText = "";
 
@@ -372,6 +349,34 @@ export default function ChatTab({
 
       <div className="p-4 border-t border-purple-950/25 bg-[#0d0e14]/50 shrink-0">
         <div className="max-w-4xl mx-auto">
+          {attachedImage && (
+            <div className="mb-3 px-4 py-2 bg-[#16171f] rounded-xl border border-purple-950/30 flex items-center justify-between max-w-sm">
+              <div className="flex items-center gap-3 truncate">
+                <img
+                  src={`data:${attachedImage.mimeType};base64,${attachedImage.data}`}
+                  alt="Attachment preview"
+                  className="w-10 h-10 rounded-lg object-cover border border-purple-950/30 shrink-0"
+                />
+
+                <div className="truncate">
+                  <span className="text-xs text-white truncate block font-semibold">
+                    {attachedFileName || "Attached image"}
+                  </span>
+                  <span className="text-[10px] text-[#8b8e99] uppercase">
+                    IMAGE
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={removeAttachment}
+                className="p-1 hover:bg-purple-950/20 rounded-full text-[#8b8e99] hover:text-red-400"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           {attachedPdf && (
             <div className="mb-3 px-4 py-2 bg-[#16171f] rounded-xl border border-purple-950/30 flex items-center justify-between max-w-sm">
               <div className="flex items-center gap-3 truncate">
@@ -445,19 +450,6 @@ export default function ChatTab({
               title="Upload PDF"
             >
               <Paperclip className="w-4.5 h-4.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                alert(
-                  "Voice transcription interface is loading. Speak after microphone tone starts.",
-                )
-              }
-              className="p-3 text-[#8b8e99] hover:text-white hover:bg-purple-950/10 rounded-xl transition"
-              title="Voice transcription input"
-            >
-              <Mic className="w-4.5 h-4.5" />
             </button>
 
             <input

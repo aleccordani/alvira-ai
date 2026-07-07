@@ -5,7 +5,9 @@ const usecase = new GetDashboardStatsUseCase();
 
 export class DashboardController {
   async stats(req: Request, res: Response) {
-    const result = await usecase.execute();
+    const userId = (req as any).user.userId;
+
+    const result = await usecase.execute(userId);
 
     res.json(result);
   }

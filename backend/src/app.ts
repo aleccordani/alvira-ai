@@ -13,6 +13,9 @@ import workspaceFileRoutes from "./modules/workspace-file/presentation/workspace
 import workspaceAiRoutes from "./modules/workspace-ai/presentation/workspace-ai.routes.js";
 import aiToolsRoutes from "./modules/ai-tools/presentation/ai-tools.route.js";
 import dashboardRouter from "./modules/dashboard/presentation/dashboard.route.js";
+import imageRoutes from "./modules/image-generation/presentation/image.routes.js";
+import { authMiddleware } from "./middlewares/auth.middleware.js";
+import analyticsRoutes from "./modules/analytics/presentation/analytics.routes.js";
 
 const app = express();
 
@@ -38,7 +41,9 @@ app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", workspaceFileRoutes);
 app.use("/api", workspaceAiRoutes);
 app.use("/api/ai-tools", aiToolsRoutes);
-app.use("/api/dashboard", dashboardRouter);
+app.use("/api/dashboard", authMiddleware, dashboardRouter);
+app.use("/api/analytics", authMiddleware, analyticsRoutes);
+app.use("/api/image", imageRoutes);
 
 app.use(errorMiddleware);
 

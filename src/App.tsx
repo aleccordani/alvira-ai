@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Toaster, toast } from "sonner";
 import LandingPage from "./components/LandingPage";
 import PricingPage from "./components/PricingPage";
 import AuthPage from "./components/AuthPage";
@@ -188,7 +189,7 @@ export default function App() {
       setActiveTab("chat");
     } catch (error) {
       console.error("Failed to create conversation:", error);
-      alert("Failed to create new chat.");
+      toast.error("Failed to create new chat.");
     }
   };
 
@@ -240,9 +241,10 @@ export default function App() {
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
-      alert("Failed to delete conversation.");
+      toast.error("Failed to delete conversation.");
     }
   };
+
   const handleRenameChat = async (chatId: string, title: string) => {
     const cleanTitle = title.trim();
 
@@ -258,131 +260,144 @@ export default function App() {
       );
     } catch (error) {
       console.error("Failed to rename conversation:", error);
-      alert("Failed to rename conversation.");
+      toast.error("Failed to rename conversation.");
     }
   };
 
   if (viewState === "landing") {
     return (
-      <LandingPage
-        onLogin={() => {
-          setAuthMode("login");
-          setViewState("auth");
-        }}
-        onRegister={() => {
-          setAuthMode("register");
-          setViewState("auth");
-        }}
-        onNavigateToPricing={() => setViewState("pricing")}
-      />
+      <>
+        <Toaster richColors position="top-right" duration={2500} theme="dark" />
+        <LandingPage
+          onLogin={() => {
+            setAuthMode("login");
+            setViewState("auth");
+          }}
+          onRegister={() => {
+            setAuthMode("register");
+            setViewState("auth");
+          }}
+          onNavigateToPricing={() => setViewState("pricing")}
+        />
+      </>
     );
   }
 
   if (viewState === "auth") {
     return (
-      <AuthPage
-        initialMode={authMode}
-        onBack={() => setViewState("landing")}
-        onSuccess={(updatedUser) => {
-          setUser((prev) => ({
-            ...prev,
-            ...updatedUser,
-            plan: prev.plan || "Pro",
-            tokensLimit:
-              prev.plan === "Free"
-                ? 100000
-                : prev.plan === "Business"
-                  ? 5000000
-                  : 1500000,
-            tokensUsed: 0,
-          }));
+      <>
+        <Toaster richColors position="top-right" duration={2500} theme="dark" />
+        <AuthPage
+          initialMode={authMode}
+          onBack={() => setViewState("landing")}
+          onSuccess={(updatedUser) => {
+            setUser((prev) => ({
+              ...prev,
+              ...updatedUser,
+              plan: prev.plan || "Pro",
+              tokensLimit:
+                prev.plan === "Free"
+                  ? 100000
+                  : prev.plan === "Business"
+                    ? 5000000
+                    : 1500000,
+              tokensUsed: 0,
+            }));
 
-          setViewState("workspace");
-          setActiveTab("dashboard");
-        }}
-      />
+            setViewState("workspace");
+            setActiveTab("dashboard");
+          }}
+        />
+      </>
     );
   }
 
   if (viewState === "pricing") {
     return (
-      <PricingPage
-        onBack={() => setViewState("landing")}
-        onSelectPlan={(plan) => {
-          setUser((prev) => ({
-            ...prev,
-            plan,
-            tokensLimit:
-              plan === "Free" ? 100000 : plan === "Pro" ? 1500000 : 5000000,
-            tokensUsed: plan === "Free" ? 12000 : 124000,
-          }));
+      <>
+        <Toaster richColors position="top-right" duration={2500} theme="dark" />
+        <PricingPage
+          onBack={() => setViewState("landing")}
+          onSelectPlan={(plan) => {
+            setUser((prev) => ({
+              ...prev,
+              plan,
+              tokensLimit:
+                plan === "Free" ? 100000 : plan === "Pro" ? 1500000 : 5000000,
+              tokensUsed: plan === "Free" ? 12000 : 124000,
+            }));
 
-          setAuthMode("register");
-          setViewState("auth");
-        }}
-      />
+            setAuthMode("register");
+            setViewState("auth");
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0b0c10]">
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        user={user}
-        onLogout={handleLogout}
-        onNewChat={handleNewChat}
-        chatSessions={chatSessions}
-        activeSessionId={activeSessionId}
-        onSelectChat={handleSelectChat}
-        onDeleteChat={handleDeleteChat}
-        onRenameChat={handleRenameChat}
-      />
+    <>
+      <Toaster richColors position="top-right" duration={2500} theme="dark" />
 
-      <div className="flex-1 flex flex-col overflow-hidden h-full">
-        {activeTab === "dashboard" && (
-          <DashboardTab
-            user={user}
-            recentChats={chatSessions.slice(0, 3)}
-            onSelectChat={handleSelectChat}
-            onNavigateToTab={setActiveTab}
-            onPreFillPrompt={handlePreFillPrompt}
-          />
-        )}
+      <div className="flex h-screen overflow-hidden bg-[#0b0c10]">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          user={user}
+          onLogout={handleLogout}
+          onNewChat={handleNewChat}
+          chatSessions={chatSessions}
+          activeSessionId={activeSessionId}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
+        />
 
-        {activeTab === "chat" && (
-          <ChatTab
-            user={user}
-            setUser={setUser}
-            activeSession={activeSession}
-            onUpdateSessionMessages={handleUpdateSessionMessages}
-            preFilledPrompt={preFilledPrompt}
-            clearPreFilledPrompt={() => setPreFilledPrompt("")}
-            onRefreshConversations={loadConversations}
-            activeTool={activeTool}
-          />
-        )}
+        <div className="flex-1 flex flex-col overflow-hidden h-full">
+          {activeTab === "dashboard" && (
+            <DashboardTab
+              user={user}
+              recentChats={chatSessions.slice(0, 3)}
+              onSelectChat={handleSelectChat}
+              onNavigateToTab={setActiveTab}
+              onPreFillPrompt={handlePreFillPrompt}
+            />
+          )}
 
-        {activeTab === "tools" && (
-          <ToolsTab
-            user={user}
-            setUser={setUser}
-            onOpenToolChat={(tool) => {
-              setActiveTool(tool);
-              setPreFilledPrompt("");
-              setActiveTab("chat");
-            }}
-          />
-        )}
+          {activeTab === "chat" && (
+            <ChatTab
+              user={user}
+              setUser={setUser}
+              activeSession={activeSession}
+              onUpdateSessionMessages={handleUpdateSessionMessages}
+              preFilledPrompt={preFilledPrompt}
+              clearPreFilledPrompt={() => setPreFilledPrompt("")}
+              onRefreshConversations={loadConversations}
+              activeTool={activeTool}
+            />
+          )}
 
-        {activeTab === "analytics" && <AnalyticsTab />}
+          {activeTab === "tools" && (
+            <ToolsTab
+              user={user}
+              setUser={setUser}
+              onOpenToolChat={(tool) => {
+                setActiveTool(tool);
+                setPreFilledPrompt("");
+                setActiveTab("chat");
+              }}
+            />
+          )}
 
-        {activeTab === "settings" && (
-          <SettingsTab user={user} setUser={setUser} />
-        )}
-        {activeTab === "workspace" && <WorkspacePage />}
+          {activeTab === "analytics" && <AnalyticsTab />}
 
+          {activeTab === "settings" && (
+            <SettingsTab user={user} setUser={setUser} />
+          )}
+
+          {activeTab === "workspace" && <WorkspacePage />}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

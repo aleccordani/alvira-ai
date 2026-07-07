@@ -36,28 +36,40 @@ export default function DashboardTab({
   // Mock data matching screenshots or custom values
   const popularTools = [
     {
-      id: "lingoflow",
-      name: "LingoFlow",
-      desc: "Polyglot translation suite",
-      icon: <Globe className="w-5 h-5 text-blue-400" />,
-    },
-    {
-      id: "canvas",
-      name: "Canvas AI",
-      desc: "Interactive vector design assistant",
-      icon: <Palette className="w-5 h-5 text-pink-400" />,
-    },
-    {
-      id: "devpilot",
-      name: "DevPilot",
-      desc: "Type-safe structural code engineering",
+      id: "coder",
+      name: "Neural Code Studio",
+      desc: "Generate, explain and refactor code",
       icon: <Code2 className="w-5 h-5 text-emerald-400" />,
     },
     {
-      id: "market",
-      name: "Market Predictor",
-      desc: "Analyze telemetry logs & spreadsheets",
-      icon: <Cpu className="w-5 h-5 text-purple-400" />,
+      id: "summarizer",
+      name: "Document Summarizer",
+      desc: "Summarize PDF and documents instantly",
+      icon: <BookOpen className="w-5 h-5 text-indigo-400" />,
+    },
+    {
+      id: "translator",
+      name: "LingoFlow Translator",
+      desc: "Translate across multiple languages",
+      icon: <Globe className="w-5 h-5 text-blue-400" />,
+    },
+    {
+      id: "writer",
+      name: "Writing Assistant",
+      desc: "Professional AI writing companion",
+      icon: <Sparkles className="w-5 h-5 text-pink-400" />,
+    },
+    {
+      id: "image",
+      name: "Image Studio",
+      desc: "Generate AI images from prompts",
+      icon: <Palette className="w-5 h-5 text-purple-400" />,
+    },
+    {
+      id: "business",
+      name: "Business Strategy Canvas",
+      desc: "Plan and validate business ideas",
+      icon: <TrendingUp className="w-5 h-5 text-orange-400" />,
     },
   ];
 
@@ -73,6 +85,7 @@ export default function DashboardTab({
     conversations: 0,
     workspaces: 0,
     documents: 0,
+    generatedImages: 0,
     aiRequests: 0,
   });
 
@@ -179,7 +192,7 @@ export default function DashboardTab({
       </div>
 
       {/* Live Platform Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-5">
           <p className="text-xs text-[#8b8e99]">Conversations</p>
           <h3 className="text-2xl font-extrabold text-white mt-2">
@@ -205,6 +218,13 @@ export default function DashboardTab({
           <p className="text-xs text-[#8b8e99]">AI Requests</p>
           <h3 className="text-2xl font-extrabold text-white mt-2">
             {stats.aiRequests}
+          </h3>
+        </div>
+
+        <div className="bg-[#16171f] border border-purple-950/15 rounded-2xl p-5">
+          <p className="text-xs text-[#8b8e99]">Generated Images</p>
+          <h3 className="text-2xl font-extrabold text-white mt-2">
+            {stats.generatedImages}
           </h3>
         </div>
       </div>
@@ -351,7 +371,7 @@ export default function DashboardTab({
         <h2 className="text-sm font-bold text-white tracking-tight mb-5">
           Popular AI Tools Workspace
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {popularTools.map((tool) => (
             <div
               key={tool.id}

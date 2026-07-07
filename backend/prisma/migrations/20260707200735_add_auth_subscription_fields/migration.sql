@@ -1,0 +1,14 @@
+-- CreateEnum
+CREATE TYPE "AuthProvider" AS ENUM ('LOCAL', 'GOOGLE', 'GITHUB', 'APPLE');
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "bio" TEXT,
+ADD COLUMN     "imageUsed" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "provider" "AuthProvider" NOT NULL DEFAULT 'LOCAL',
+ADD COLUMN     "providerId" TEXT,
+ADD COLUMN     "role" "UserRole" NOT NULL DEFAULT 'USER',
+ADD COLUMN     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
+ADD COLUMN     "storageUsed" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "tokensUsed" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "workspaceUsed" INTEGER NOT NULL DEFAULT 0,
+ALTER COLUMN "password" DROP NOT NULL;
