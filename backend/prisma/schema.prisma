@@ -20,6 +20,8 @@ enum PlanType {
   FREE
   PRO
   BUSINESS
+  TEAM
+  ENTERPRISE
 }
 
 enum AuthProvider {
@@ -29,31 +31,103 @@ enum AuthProvider {
   APPLE
 }
 
-model Plan {
-  id         String   @id @default(uuid())
-  name       String
-  type       PlanType @unique
-  price      Int      @default(0)
-  chatLimit  Int
-  tokenLimit Int
+enum SubscriptionStatus {
+  ACTIVE
+  PENDING
+  CANCELLED
+  EXPIRED
+  TRIAL
+}
 
-  users User[]
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+}
+
+model Plan {
+  id String @id @default(uuid())
+
+  name String
+  type PlanType @unique
+
+  price          Int @default(0)
+  monthlyCredits Int @default(0)
+
+  chatLimit      Int?
+  imageLimit     Int?
+  workspaceLimit Int?
+  uploadLimitMb  Int?
+
+  features Json?
+
+  users         User[]
+  subscriptions Subscription[]
+  payments      Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Subscription {
+  id String @id @default(uuid())
+
+  userId String
+  planId String
+
+  status SubscriptionStatus @default(ACTIVE)
+
+  startedAt DateTime  @default(now())
+  expiresAt DateTime?
+
+  provider  String?
+  paymentId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([planId])
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  userId String
+  planId String?
+
+  amount Int
+
+  provider      String
+  transactionId String?
+  status        PaymentStatus @default(PENDING)
+
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan? @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([planId])
+}
+
 model User {
-  id            String  @id @default(uuid())
+  id            String       @id @default(uuid())
   name          String
-  email         String  @unique
-  emailVerified Boolean @default(false)
+  email         String       @unique
+  emailVerified Boolean      @default(false)
   image         String?
   password      String?
-  role   UserRole   @default(USER)
-  status UserStatus @default(ACTIVE)
-  provider   AuthProvider @default(LOCAL)
-  providerId String?
+  role          UserRole     @default(USER)
+  status        UserStatus   @default(ACTIVE)
+  provider      AuthProvider @default(LOCAL)
+  providerId    String?
 
   planId String?
   avatar String?
@@ -74,6 +148,8 @@ model User {
   documents       Document[]
   workspaces      Workspace[]
   generatedImages GeneratedImage[]
+  subscriptions   Subscription[]
+  payments        Payment[]
 
   accounts Account[]
   sessions Session[]
