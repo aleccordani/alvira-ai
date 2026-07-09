@@ -1,14 +1,13 @@
 import { Router } from "express";
 
-import { betterAuthMiddleware } from "../../../middlewares/better-auth.middleware.js";
 import { conversationController } from "../../../container/conversation.container.js";
 
 const router = Router();
 
-router.post("/", betterAuthMiddleware, conversationController.create);
-router.get("/", betterAuthMiddleware, conversationController.findAll);
-router.get("/:id", betterAuthMiddleware, conversationController.findOne);
-router.patch("/:id", betterAuthMiddleware, conversationController.update);
-router.delete("/:id", betterAuthMiddleware, conversationController.delete);
+router.post("/", conversationController.create);
+router.get("/", conversationController.findAll);
+router.get("/:id", conversationController.findOne);
+router.patch("/:id", conversationController.update);
+router.delete("/:id", conversationController.delete);
 
 export default router;

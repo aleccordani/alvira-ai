@@ -15,6 +15,7 @@ interface ChatTabProps {
   preFilledPrompt: string;
   clearPreFilledPrompt: () => void;
   onRefreshConversations: () => Promise<void>;
+  onCreateChat: () => Promise<string | null>;
   activeTool?: AiTool;
 }
 
@@ -62,6 +63,7 @@ export default function ChatTab({
   activeSession,
   onUpdateSessionMessages,
   onRefreshConversations,
+  onCreateChat,
   preFilledPrompt,
   clearPreFilledPrompt,
   activeTool = "general",
@@ -145,8 +147,18 @@ export default function ChatTab({
 
     if (!finalMessageText.trim() && !attachedImage && !attachedPdf) return;
 
-    if (!activeSession) {
-      toast.error("Failed to create new chat.");
+    let session = activeSession;
+
+    if (!session) {
+      const newSessionId = await onCreateChat();
+
+      if (!newSessionId) {
+        toast.error("Failed to create new chat.");
+        return;
+      }
+
+      await onRefreshConversations();
+      toast.success("New chat created. Please send your message again.");
       return;
     }
 

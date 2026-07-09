@@ -183,7 +183,7 @@ export default function App() {
   const handleNewChat = async () => {
     try {
       const response = await createConversation();
-      const conversation = response.data || response.data?.data;
+      const conversation = response.data ?? response.data?.data ?? response;
 
       const newSession: ChatSession = {
         id: conversation.id,
@@ -197,9 +197,12 @@ export default function App() {
       setChatSessions((prev) => [newSession, ...prev]);
       setActiveSessionId(newSession.id);
       setActiveTab("chat");
+
+      return newSession.id;
     } catch (error) {
       console.error("Failed to create conversation:", error);
       toast.error("Failed to create new chat.");
+      return null;
     }
   };
 
@@ -390,6 +393,7 @@ export default function App() {
               clearPreFilledPrompt={() => setPreFilledPrompt("")}
               onRefreshConversations={loadConversations}
               activeTool={activeTool}
+              onCreateChat={handleNewChat}
             />
           )}
 
