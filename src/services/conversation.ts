@@ -1,12 +1,7 @@
 import api from "./api";
 
-export const getConversations = async (token: string) => {
-  const response = await api.get("/conversations", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
+export const getConversations = async () => {
+  const response = await api.get("/conversations");
   return response.data.data;
 };
 

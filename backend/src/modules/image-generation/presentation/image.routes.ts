@@ -5,8 +5,8 @@ import { MockImageService } from "../infrastructure/mock-image.service.js";
 import { PrismaImageRepository } from "../infrastructure/prisma-image.repository.js";
 import { ImageController } from "./image.controller.js";
 import { GetImageHistoryUseCase } from "../application/get-image-history.usecase.js";
-import { authMiddleware } from "../../../middlewares/auth.middleware.js";
 import { DeleteImageUseCase } from "../application/delete-image.usecase.js";
+import { betterAuthMiddleware } from "../../../middlewares/better-auth.middleware.js";
 
 const router = Router();
 
@@ -30,16 +30,17 @@ const generateImageUseCase = new GenerateImageUseCase(
   imageProvider,
   imageRepository,
 );
+
 const deleteImageUseCase = new DeleteImageUseCase(imageRepository);
 
 const controller = new ImageController(
   generateImageUseCase,
   getImageHistoryUseCase,
-    deleteImageUseCase,
+  deleteImageUseCase,
 );
 
-router.post("/generate", authMiddleware, controller.generate);
-router.get("/history", authMiddleware, controller.history);
-router.delete("/:id", authMiddleware, controller.delete);
+router.post("/generate", betterAuthMiddleware, controller.generate);
+router.get("/history", betterAuthMiddleware, controller.history);
+router.delete("/:id", betterAuthMiddleware, controller.delete);
 
 export default router;

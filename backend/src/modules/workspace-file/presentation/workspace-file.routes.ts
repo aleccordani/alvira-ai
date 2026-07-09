@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
-import { authMiddleware } from "../../../middlewares/auth.middleware.js";
+
+import { betterAuthMiddleware } from "../../../middlewares/better-auth.middleware.js";
 import { workspaceFileController } from "../../../container/workspace-file.container.js";
 
 const router = Router();
@@ -11,17 +12,17 @@ const upload = multer({
 
 router.post(
   "/:id/files",
-  authMiddleware,
+  betterAuthMiddleware,
   upload.single("file"),
   workspaceFileController.upload,
 );
 
 router.delete(
   "/:id/files/:fileId",
-  authMiddleware,
+  betterAuthMiddleware,
   workspaceFileController.remove,
 );
 
-router.get("/:id/files", authMiddleware, workspaceFileController.list);
+router.get("/:id/files", betterAuthMiddleware, workspaceFileController.list);
 
 export default router;

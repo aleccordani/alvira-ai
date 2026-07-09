@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "../lib/auth.js";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -7,34 +8,25 @@ export interface AuthRequest extends Request {
   };
 }
 
-export function authMiddleware(
+export async function authMiddleware(
   req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) {
-  const authHeader = req.headers.authorization;
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
 
-  if (!authHeader) {
+  if (!session?.user?.id) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized",
     });
   }
 
-  const token = authHeader.replace("Bearer ", "");
+  req.user = {
+    userId: session.user.id,
+  };
 
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
-      userId: string;
-    };
-
-    req.user = payload;
-
-    next();
-  } catch {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
-  }
+  return next();
 }

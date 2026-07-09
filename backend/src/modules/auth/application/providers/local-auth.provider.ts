@@ -1,7 +1,7 @@
-import { AuthProvider } from "./auth-provider.js";
+import { AuthProvider, AuthResult } from "./auth-provider.js";
 
-export class LocalAuthProvider implements AuthProvider {
-  async login(data: unknown) {
-    throw new Error("Not implemented yet.");
+export class LocalAuthProvider implements AuthProvider<unknown, unknown> {
+  async login(data: unknown): Promise<AuthResult<unknown>> {
+    throw new Error("LocalAuthProvider is deprecated. Use AuthService login or Better Auth.");
   }
 }

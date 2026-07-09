@@ -1,11 +1,8 @@
-import { getToken } from "../lib/token";
-
 export async function streamCodeExplanation(
   language: string,
   code: string,
   onChunk: (chunk: string) => void,
 ) {
-  const token = getToken();
 
   const response = await fetch(
     "http://localhost:5000/api/tools/code/explain/stream",
@@ -13,7 +10,6 @@ export async function streamCodeExplanation(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         language,

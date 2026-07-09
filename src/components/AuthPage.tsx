@@ -18,9 +18,11 @@ import {
   Apple,
 } from "lucide-react";
 import { UserProfile } from "../types";
-import { loginRequest, registerRequest } from "@/src/services/auth";
-import { saveToken } from "../lib/token";
-
+import {
+  loginRequest,
+  registerRequest,
+  getMeRequest,
+} from "@/src/services/auth";
 interface AuthPageProps {
   onSuccess: (updatedUser: Partial<UserProfile>) => void;
   onBack: () => void;
@@ -231,21 +233,21 @@ export default function AuthPage({
       setIsLoading(true);
       setLoadingStep(0);
 
-      const response =
-        mode === "login"
-          ? await loginRequest(email, password)
-          : await registerRequest(name, email, password);
+      if (mode === "login") {
+        await loginRequest(email, password);
+      } else {
+        await registerRequest(name, email, password);
+      }
 
-      const token = response.data.token;
-      const user = response.data.user;
-
-      saveToken(token);
+      const session = await getMeRequest();
+      const user = session.user;
 
       onSuccess({
         name: user.name,
         email: user.email,
         bio: "Alvira AI User",
         avatarUrl:
+          user.image ??
           user.avatar ??
           `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.name)}`,
       });

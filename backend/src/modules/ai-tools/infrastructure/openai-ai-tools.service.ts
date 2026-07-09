@@ -47,6 +47,12 @@ export class OpenAiToolsService implements AiToolsProvider {
       translator: `${base}\n\nTranslate the following text while preserving tone and context:\n\n${input}`,
 
       "business-analyzer": `${base}\n\nAnalyze this business idea. Include market potential, strengths, weaknesses, target customers, revenue streams, and recommendation:\n\n${input}`,
+
+      "image-prompter": `
+You are an expert AI image prompt engineer.
+Create a detailed, high-quality image generation prompt based on the user's request.
+Return only the final prompt.
+`,
     };
 
     return prompts[tool];

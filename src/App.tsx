@@ -18,7 +18,7 @@ import {
   deleteConversation,
   renameConversation,
 } from "./services/conversation";
-import { getToken, removeToken } from "./lib/token";
+import { getMeRequest, logoutRequest } from "./services/auth";
 import { WorkspacePage } from "./modules/workspace";
 
 export default function App() {
@@ -32,10 +32,10 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<AiTool>("general");
 
   const [user, setUser] = useState<UserProfile>({
-    name: "Alec",
-    email: "alec@gmail.com",
+    name: "",
+    email: "",
     bio: "Alvira AI User",
-    avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=Alec",
+    avatarUrl: "",
     plan: "Pro",
     theme: "dark",
     tokensUsed: 0,
@@ -86,19 +86,9 @@ export default function App() {
 
   const loadConversations = async () => {
     try {
-      const token = getToken();
-
-      if (!token) {
-        setChatSessions([]);
-        setActiveSessionId("");
-        return;
-      }
-
+      const response = await getConversations();
       const currentActiveId = activeSessionId;
-
-      const response = await getConversations(token);
       const conversations = normalizeConversations(response);
-
       const sessions: ChatSession[] = conversations.map((conversation: any) =>
         mapBackendConversation(conversation),
       );
@@ -136,12 +126,32 @@ export default function App() {
   };
 
   useEffect(() => {
-    const token = getToken();
+    const loadSession = async () => {
+      try {
+        const session = await getMeRequest();
+        const sessionUser = session?.user;
 
-    if (token) {
-      setViewState("workspace");
-      setActiveTab("dashboard");
-    }
+        if (!sessionUser) return;
+
+        setUser((prev) => ({
+          ...prev,
+          name: sessionUser.name,
+          email: sessionUser.email,
+          avatarUrl:
+            sessionUser.image ??
+            `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
+              sessionUser.name,
+            )}`,
+        }));
+
+        setViewState("workspace");
+        setActiveTab("dashboard");
+      } catch {
+        setViewState("landing");
+      }
+    };
+
+    loadSession();
   }, []);
 
   useEffect(() => {
@@ -215,10 +225,16 @@ export default function App() {
     setActiveTab("chat");
   };
 
-  const handleLogout = () => {
-    removeToken();
+  const handleLogout = async () => {
+    await logoutRequest();
     setChatSessions([]);
     setActiveSessionId("");
+    setUser((prev) => ({
+      ...prev,
+      name: "",
+      email: "",
+      avatarUrl: "",
+    }));
     setViewState("landing");
     setActiveTab("dashboard");
   };

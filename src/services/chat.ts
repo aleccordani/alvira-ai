@@ -1,5 +1,3 @@
-import { getToken } from "../lib/token";
-
 const API_URL = "http://localhost:5000/api";
 
 export type AiTool =
@@ -16,13 +14,11 @@ export const sendChat = async (
   content: string,
   tool: AiTool = "general",
 ) => {
-  const token = getToken();
-
   const response = await fetch(`${API_URL}/chat`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ conversationId, content, tool }),
   });
@@ -38,13 +34,11 @@ export const streamChat = async (
   onChunk: (chunk: string) => void,
   tool: AiTool = "general",
 ) => {
-  const token = getToken();
-
   const response = await fetch(`${API_URL}/chat/stream`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ conversationId, content, tool }),
   });
