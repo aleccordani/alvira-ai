@@ -20,6 +20,7 @@ import analyticsRoutes from "./modules/analytics/presentation/analytics.routes.j
 import { betterAuthHandler } from "./modules/auth/presentation/better-auth.routes.js";
 import { betterAuthMiddleware } from "./middlewares/better-auth.middleware.js";
 import adminRoutes from "./modules/admin/presentation/admin.routes.js";
+import billingRoutes from "./modules/billing/presentation/billing.routes.js";
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use("/api/dashboard", betterAuthMiddleware, dashboardRouter);
 app.use("/api/analytics", betterAuthMiddleware, analyticsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/image", imageRoutes);
+app.use("/api/billing", billingRoutes);
 
 app.use(errorMiddleware);
 
