@@ -15,13 +15,36 @@ async function main() {
     where: {
       type: PlanType.FREE,
     },
-    update: {},
+    update: {
+      name: "Starter",
+      price: 0,
+      monthlyCredits: 1_000,
+      chatLimit: 100,
+      imageLimit: 5,
+      workspaceLimit: 1,
+      uploadLimitMb: 10,
+      features: {
+        memory: false,
+        analytics: false,
+        imageGeneration: false,
+        priorityQueue: false,
+      },
+    },
     create: {
       name: "Starter",
       type: PlanType.FREE,
       price: 0,
+      monthlyCredits: 1_000,
       chatLimit: 100,
-      tokenLimit: 50000,
+      imageLimit: 5,
+      workspaceLimit: 1,
+      uploadLimitMb: 10,
+      features: {
+        memory: false,
+        analytics: false,
+        imageGeneration: false,
+        priorityQueue: false,
+      },
     },
   });
 
@@ -29,13 +52,38 @@ async function main() {
     where: {
       type: PlanType.PRO,
     },
-    update: {},
+    update: {
+      name: "Pro Studio",
+      price: 99_000,
+      monthlyCredits: 1_500_000,
+      chatLimit: 100_000,
+      imageLimit: 500,
+      workspaceLimit: 100,
+      uploadLimitMb: 100,
+      features: {
+        memory: true,
+        analytics: true,
+        imageGeneration: true,
+        priorityQueue: true,
+        exportChat: true,
+      },
+    },
     create: {
       name: "Pro Studio",
       type: PlanType.PRO,
-      price: 29,
-      chatLimit: 100000,
-      tokenLimit: 1500000,
+      price: 99_000,
+      monthlyCredits: 1_500_000,
+      chatLimit: 100_000,
+      imageLimit: 500,
+      workspaceLimit: 100,
+      uploadLimitMb: 100,
+      features: {
+        memory: true,
+        analytics: true,
+        imageGeneration: true,
+        priorityQueue: true,
+        exportChat: true,
+      },
     },
   });
 
@@ -43,13 +91,42 @@ async function main() {
     where: {
       type: PlanType.BUSINESS,
     },
-    update: {},
+    update: {
+      name: "Team",
+      price: 399_000,
+      monthlyCredits: 5_000_000,
+      chatLimit: 999_999,
+      imageLimit: 2_000,
+      workspaceLimit: 500,
+      uploadLimitMb: 500,
+      features: {
+        memory: true,
+        analytics: true,
+        imageGeneration: true,
+        priorityQueue: true,
+        exportChat: true,
+        teamWorkspace: true,
+        sharedCredits: true,
+      },
+    },
     create: {
-      name: "Enterprise",
+      name: "Team",
       type: PlanType.BUSINESS,
-      price: 99,
-      chatLimit: 999999,
-      tokenLimit: 5000000,
+      price: 399_000,
+      monthlyCredits: 5_000_000,
+      chatLimit: 999_999,
+      imageLimit: 2_000,
+      workspaceLimit: 500,
+      uploadLimitMb: 500,
+      features: {
+        memory: true,
+        analytics: true,
+        imageGeneration: true,
+        priorityQueue: true,
+        exportChat: true,
+        teamWorkspace: true,
+        sharedCredits: true,
+      },
     },
   });
 
@@ -58,7 +135,7 @@ async function main() {
 
 main()
   .catch((error) => {
-    console.error(error);
+    console.error("❌ Failed to seed plans:", error);
     process.exit(1);
   })
   .finally(async () => {

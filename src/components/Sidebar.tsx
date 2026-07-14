@@ -14,6 +14,9 @@ import {
   BrainCircuit,
 } from "lucide-react";
 import { UserProfile, ChatSession } from "../types";
+import { CreditCard } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { billingService } from "../modules/billing/services/billing.service";
 
 interface SidebarProps {
   activeTab: string;
@@ -52,6 +55,11 @@ export default function Sidebar({
       icon: <MessageSquare className="w-4.5 h-4.5" />,
     },
     {
+      id: "billing",
+      label: "Billing",
+      icon: <CreditCard className="w-4.5 h-4.5" />,
+    },
+    {
       id: "workspace",
       label: "Workspace AI",
       icon: <BrainCircuit className="w-4.5 h-4.5" />,
@@ -72,6 +80,12 @@ export default function Sidebar({
       icon: <Settings className="w-4.5 h-4.5" />,
     },
   ];
+  const { data: billing } = useQuery({
+  queryKey: ["billing"],
+  queryFn: billingService.getMyBilling,
+});
+
+const currentPlanType = billing?.plan.type ?? "FREE";
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -210,11 +224,12 @@ export default function Sidebar({
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full px-4 py-3 rounded-xl flex items-center gap-3.5 text-sm font-medium transition-all ${
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition ${
                   isActive
-                    ? "bg-purple-950/30 border-l-2 border-purple-500 text-white shadow-inner"
-                    : "hover:bg-purple-950/5 hover:text-white"
+                    ? "border-l-2 border-purple-500 bg-purple-950/30 text-white shadow-inner"
+                    : "text-[#8b8e99] hover:bg-purple-950/10 hover:text-white"
                 }`}
               >
                 <div
@@ -222,6 +237,7 @@ export default function Sidebar({
                 >
                   {item.icon}
                 </div>
+
                 <span>{item.label}</span>
               </button>
             );
@@ -230,26 +246,28 @@ export default function Sidebar({
       </div>
 
       <div className="p-4 border-t border-purple-950/15">
-        <div className="mb-4 bg-gradient-to-br from-purple-950/45 to-[#16171f] border border-purple-950/50 p-3 rounded-xl flex items-center justify-between shadow-md">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-purple-950/50 bg-gradient-to-br from-purple-950/45 to-[#16171f] p-3 shadow-md">
           <div>
-            <span className="text-[9px] text-purple-400 font-mono tracking-widest uppercase font-semibold block">
+            <span className="block text-[9px] font-semibold uppercase tracking-widest text-purple-400 font-mono">
               Active Tier
             </span>
-            <span className="text-xs font-bold text-white block mt-0.5">
-              {user.plan === "Free"
+
+            <span className="mt-0.5 block text-xs font-bold text-white">
+              {currentPlanType === "FREE"
                 ? "Starter Tier"
-                : user.plan === "Pro"
+                : currentPlanType === "PRO"
                   ? "Pro Studio"
-                  : "Enterprise"}
+                  : "Team"}
             </span>
           </div>
 
-          <div className="px-2 py-1 bg-purple-600/20 border border-purple-500/30 rounded-lg text-[10px] font-semibold text-purple-300 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-purple-300 animate-pulse" />
+          <div className="flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-600/20 px-2 py-1 text-[10px] font-semibold text-purple-300">
+            <Sparkles className="h-3 w-3 animate-pulse text-purple-300" />
+
             <span>
-              {user.plan === "Free"
-                ? "Lite"
-                : user.plan === "Pro"
+              {currentPlanType === "FREE"
+                ? "LITE"
+                : currentPlanType === "PRO"
                   ? "PRO"
                   : "TEAM"}
             </span>

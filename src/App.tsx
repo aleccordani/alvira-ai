@@ -20,6 +20,7 @@ import {
 } from "./services/conversation";
 import { getMeRequest, logoutRequest } from "./services/auth";
 import { WorkspacePage } from "./modules/workspace";
+import { BillingPage } from "./modules/billing";
 
 export default function App() {
   const [viewState, setViewState] = useState<
@@ -372,7 +373,7 @@ export default function App() {
           onRenameChat={handleRenameChat}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden h-full">
+        <div className="flex-1 min-h-0 overflow-y-auto h-full">
           {activeTab === "dashboard" && (
             <DashboardTab
               user={user}
@@ -410,7 +411,7 @@ export default function App() {
           )}
 
           {activeTab === "analytics" && <AnalyticsTab />}
-
+          {activeTab === "billing" && <BillingPage />}
           {activeTab === "settings" && (
             <SettingsTab user={user} setUser={setUser} />
           )}
