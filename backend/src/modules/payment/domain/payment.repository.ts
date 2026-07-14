@@ -27,10 +27,25 @@ export type PendingPayment = {
   amount: number;
 };
 
+export type PaymentHistoryItem = {
+  id: string;
+  amount: number;
+  status: string;
+  provider: string;
+  createdAt: Date;
+  plan: {
+    name: string;
+  } | null;
+};
+
 export interface PaymentRepository {
   findUserById(userId: string): Promise<PaymentUser | null>;
 
   findPlanByType(type: PlanType): Promise<PaymentPlan | null>;
 
-  createPending(data: CreatePendingPaymentInput): Promise<PendingPayment>;
+  createPending(
+    data: CreatePendingPaymentInput,
+  ): Promise<PendingPayment>;
+
+  findByUserId(userId: string): Promise<PaymentHistoryItem[]>;
 }

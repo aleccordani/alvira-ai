@@ -7,6 +7,7 @@ import { billingService } from "../services/billing.service";
 import { paymentService } from "../services/payment.service";
 import PaymentHistory from "../../payment/components/PaymentHistory";
 
+
 export default function BillingPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 

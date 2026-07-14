@@ -3,6 +3,7 @@ import type { PlanType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.js";
 import type {
   CreatePendingPaymentInput,
+  PaymentHistoryItem,
   PaymentPlan,
   PaymentRepository,
   PaymentUser,
@@ -53,6 +54,29 @@ export class PrismaPaymentRepository implements PaymentRepository {
         id: true,
         transactionId: true,
         amount: true,
+      },
+    });
+  }
+
+  async findByUserId(userId: string): Promise<PaymentHistoryItem[]> {
+    return prisma.payment.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+        amount: true,
+        status: true,
+        provider: true,
+        createdAt: true,
+        plan: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
   }
