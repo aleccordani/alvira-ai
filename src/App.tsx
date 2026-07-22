@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Menu } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import LandingPage from "./components/LandingPage";
 import PricingPage from "./components/PricingPage";
@@ -21,6 +22,7 @@ import {
 import { getMeRequest, logoutRequest } from "./services/auth";
 import { WorkspacePage } from "./modules/workspace";
 import { BillingPage } from "./modules/billing";
+import { AdminPage } from "./modules/admin";
 
 export default function App() {
   const [viewState, setViewState] = useState<
@@ -31,6 +33,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [preFilledPrompt, setPreFilledPrompt] = useState("");
   const [activeTool, setActiveTool] = useState<AiTool>("general");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [user, setUser] = useState<UserProfile>({
     name: "",
@@ -38,6 +41,7 @@ export default function App() {
     bio: "Alvira AI User",
     avatarUrl: "",
     plan: "Pro",
+    role: "USER",
     theme: "dark",
     tokensUsed: 0,
     tokensLimit: 1500000,
@@ -90,6 +94,7 @@ export default function App() {
       const response = await getConversations();
       const currentActiveId = activeSessionId;
       const conversations = normalizeConversations(response);
+
       const sessions: ChatSession[] = conversations.map((conversation: any) =>
         mapBackendConversation(conversation),
       );
@@ -138,6 +143,7 @@ export default function App() {
           ...prev,
           name: sessionUser.name,
           email: sessionUser.email,
+          role: sessionUser.role === "ADMIN" ? "ADMIN" : "USER",
           avatarUrl:
             sessionUser.image ??
             `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
@@ -160,6 +166,16 @@ export default function App() {
       loadConversations();
     }
   }, [viewState]);
+
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "admin" && user.role !== "ADMIN") {
+      setActiveTab("dashboard");
+    }
+  }, [activeTab, user.role]);
 
   const handleUpdateSessionMessages = (
     sessionId: string,
@@ -198,6 +214,7 @@ export default function App() {
       setChatSessions((prev) => [newSession, ...prev]);
       setActiveSessionId(newSession.id);
       setActiveTab("chat");
+      setIsMobileSidebarOpen(false);
 
       return newSession.id;
     } catch (error) {
@@ -211,6 +228,7 @@ export default function App() {
     try {
       setActiveSessionId(chatId);
       setActiveTab("chat");
+      setIsMobileSidebarOpen(false);
 
       const response = await getConversation(chatId);
       const conversation = response.data || response.data?.data;
@@ -230,17 +248,23 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await logoutRequest();
-    setChatSessions([]);
-    setActiveSessionId("");
-    setUser((prev) => ({
-      ...prev,
-      name: "",
-      email: "",
-      avatarUrl: "",
-    }));
-    setViewState("landing");
-    setActiveTab("dashboard");
+    try {
+      await logoutRequest();
+    } finally {
+      setIsMobileSidebarOpen(false);
+      setChatSessions([]);
+      setActiveSessionId("");
+
+      setUser((prev) => ({
+        ...prev,
+        name: "",
+        email: "",
+        avatarUrl: "",
+      }));
+
+      setViewState("landing");
+      setActiveTab("dashboard");
+    }
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -288,6 +312,7 @@ export default function App() {
     return (
       <>
         <Toaster richColors position="top-right" duration={2500} theme="dark" />
+
         <LandingPage
           onLogin={() => {
             setAuthMode("login");
@@ -307,13 +332,27 @@ export default function App() {
     return (
       <>
         <Toaster richColors position="top-right" duration={2500} theme="dark" />
+
         <AuthPage
           initialMode={authMode}
           onBack={() => setViewState("landing")}
-          onSuccess={(updatedUser) => {
+          onSuccess={async (updatedUser) => {
+            let role: "USER" | "ADMIN" = "USER";
+
+            try {
+              const session = await getMeRequest();
+
+              if (session?.user?.role === "ADMIN") {
+                role = "ADMIN";
+              }
+            } catch (error) {
+              console.error("Failed to refresh user session:", error);
+            }
+
             setUser((prev) => ({
               ...prev,
               ...updatedUser,
+              role,
               plan: prev.plan || "Pro",
               tokensLimit:
                 prev.plan === "Free"
@@ -336,6 +375,7 @@ export default function App() {
     return (
       <>
         <Toaster richColors position="top-right" duration={2500} theme="dark" />
+
         <PricingPage
           onBack={() => setViewState("landing")}
           onSelectPlan={(plan) => {
@@ -359,11 +399,12 @@ export default function App() {
     <>
       <Toaster richColors position="top-right" duration={2500} theme="dark" />
 
-      <div className="flex h-screen overflow-hidden bg-[#0b0c10]">
+      <div className="flex h-[100dvh] overflow-hidden bg-[#0b0c10]">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           user={user}
+          isAdmin={user.role === "ADMIN"}
           onLogout={handleLogout}
           onNewChat={handleNewChat}
           chatSessions={chatSessions}
@@ -371,52 +412,84 @@ export default function App() {
           onSelectChat={handleSelectChat}
           onDeleteChat={handleDeleteChat}
           onRenameChat={handleRenameChat}
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
         />
 
-        <div className="flex-1 min-h-0 overflow-y-auto h-full">
-          {activeTab === "dashboard" && (
-            <DashboardTab
-              user={user}
-              recentChats={chatSessions.slice(0, 3)}
-              onSelectChat={handleSelectChat}
-              onNavigateToTab={setActiveTab}
-              onPreFillPrompt={handlePreFillPrompt}
-            />
-          )}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <header className="flex h-14 shrink-0 items-center justify-between border-b border-purple-950/25 bg-[#0d0e14]/95 px-4 backdrop-blur md:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-purple-900/25 bg-[#15161e] text-[#c5c6c7] transition hover:border-purple-500/40 hover:text-white"
+              aria-label="Open navigation menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
-          {activeTab === "chat" && (
-            <ChatTab
-              user={user}
-              setUser={setUser}
-              activeSession={activeSession}
-              onUpdateSessionMessages={handleUpdateSessionMessages}
-              preFilledPrompt={preFilledPrompt}
-              clearPreFilledPrompt={() => setPreFilledPrompt("")}
-              onRefreshConversations={loadConversations}
-              activeTool={activeTool}
-              onCreateChat={handleNewChat}
-            />
-          )}
+            <span className="text-sm font-bold tracking-wide text-white">
+              ALVIRA AI
+            </span>
 
-          {activeTab === "tools" && (
-            <ToolsTab
-              user={user}
-              setUser={setUser}
-              onOpenToolChat={(tool) => {
-                setActiveTool(tool);
-                setPreFilledPrompt("");
-                setActiveTab("chat");
-              }}
-            />
-          )}
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name || "User"}
+                className="h-9 w-9 rounded-full border border-purple-500/25 object-cover"
+              />
+            ) : (
+              <div className="h-9 w-9 rounded-full border border-purple-500/25 bg-purple-950/30" />
+            )}
+          </header>
 
-          {activeTab === "analytics" && <AnalyticsTab />}
-          {activeTab === "billing" && <BillingPage />}
-          {activeTab === "settings" && (
-            <SettingsTab user={user} setUser={setUser} />
-          )}
+          <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+            {activeTab === "dashboard" && (
+              <DashboardTab
+                user={user}
+                recentChats={chatSessions.slice(0, 3)}
+                onSelectChat={handleSelectChat}
+                onNavigateToTab={setActiveTab}
+                onPreFillPrompt={handlePreFillPrompt}
+              />
+            )}
 
-          {activeTab === "workspace" && <WorkspacePage />}
+            {activeTab === "chat" && (
+              <ChatTab
+                user={user}
+                setUser={setUser}
+                activeSession={activeSession}
+                onUpdateSessionMessages={handleUpdateSessionMessages}
+                preFilledPrompt={preFilledPrompt}
+                clearPreFilledPrompt={() => setPreFilledPrompt("")}
+                onRefreshConversations={loadConversations}
+                activeTool={activeTool}
+                onCreateChat={handleNewChat}
+                onNavigateToTab={setActiveTab}
+              />
+            )}
+
+            {activeTab === "tools" && (
+              <ToolsTab
+                user={user}
+                setUser={setUser}
+                onOpenToolChat={(tool) => {
+                  setActiveTool(tool);
+                  setPreFilledPrompt("");
+                  setActiveTab("chat");
+                }}
+              />
+            )}
+
+            {activeTab === "analytics" && <AnalyticsTab />}
+            {activeTab === "billing" && <BillingPage />}
+            {activeTab === "admin" && user.role === "ADMIN" && <AdminPage />}
+
+            {activeTab === "settings" && (
+              <SettingsTab user={user} setUser={setUser} />
+            )}
+
+            {activeTab === "workspace" && <WorkspacePage />}
+          </main>
         </div>
       </div>
     </>

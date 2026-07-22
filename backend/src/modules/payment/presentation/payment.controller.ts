@@ -70,16 +70,16 @@ export class PaymentController {
   };
 
   webhook = async (req: Request, res: Response) => {
+    console.log("========== MIDTRANS WEBHOOK RECEIVED ==========");
+    console.log("BODY:", JSON.stringify(req.body, null, 2));
+
     try {
       const result = await this.webhookUseCase.execute(
         req.body as MidtransNotification,
       );
 
-      /*
-       * Balas 200 setelah berhasil diproses.
-       * Endpoint webhook memang tidak memakai login user.
-       * Keasliannya divalidasi melalui signature Midtrans.
-       */
+      console.log("WEBHOOK PROCESSED SUCCESSFULLY:", result);
+
       return res.status(200).json({
         success: true,
         message: "Payment notification processed",

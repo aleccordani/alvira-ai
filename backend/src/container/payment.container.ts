@@ -20,7 +20,7 @@ const getPaymentHistoryUseCase = new GetPaymentHistoryUseCase(
 const paymentWebhookUseCase = new PaymentWebhookUseCase();
 
 export const paymentController = new PaymentController(
-  new CreateCheckoutUseCase(paymentRepository, paymentGateway),
-  new GetPaymentHistoryUseCase(paymentRepository),
-  new PaymentWebhookUseCase(),
+  createCheckoutUseCase,
+  getPaymentHistoryUseCase,
+  paymentWebhookUseCase,
 );

@@ -1,4 +1,7 @@
-import { AlertCircle, Bot, Clock } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
+import { motion } from "framer-motion";
+
+import alviraMark from "../../assets/alvira-mark.png";
 import RenderMarkdown from "./RenderMarkdown";
 
 type ChatMessage = {
@@ -13,71 +16,245 @@ type ChatMessage = {
 type ChatMessageItemProps = {
   message: ChatMessage;
   userAvatarUrl: string;
+  isStreaming?: boolean;
+  showAvatar?: boolean;
 };
 
 export default function ChatMessageItem({
   message,
   userAvatarUrl,
+  isStreaming = false,
+  showAvatar = true,
 }: ChatMessageItemProps) {
   const isUser = message.sender === "user";
 
   return (
-    <div className={`flex gap-4 ${isUser ? "justify-end" : "justify-start"}`}>
-      {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-purple-950/40 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <Bot className="w-4 h-4 text-purple-400" />
-        </div>
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 12,
+        scale: 0.98,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        scale: 1,
+      }}
+      transition={{
+        duration: 0.22,
+        ease: "easeOut",
+      }}
+      className={`flex min-w-0 gap-3 sm:gap-4 ${
+        isUser ? "justify-end" : "justify-start"
+      }`}
+    >
+      {!isUser && showAvatar && (
+        <motion.div
+          initial={{
+            opacity: 0,
+            scale: 0.75,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.25,
+            ease: "easeOut",
+          }}
+          className="relative h-9 w-9 shrink-0"
+        >
+          {isStreaming && (
+            <>
+              <motion.div
+                animate={{
+                  opacity: [0.25, 0.55, 0.25],
+                  scale: [0.9, 1.12, 0.9],
+                }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute inset-[-5px] rounded-full bg-gradient-to-br from-blue-500/30 via-purple-500/35 to-fuchsia-500/30 blur-md"
+              />
+
+              <motion.div
+                animate={{
+                  opacity: [0.2, 0.55, 0.2],
+                  scale: [0.95, 1.22, 0.95],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute inset-[-3px] rounded-full border border-purple-400/30"
+              />
+            </>
+          )}
+
+          <motion.div
+            animate={
+              isStreaming
+                ? {
+                    scale: [1, 1.08, 1],
+                    rotate: [0, -3, 3, 0],
+                    y: [0, -2, 0],
+                  }
+                : {
+                    scale: 1,
+                    rotate: 0,
+                    y: 0,
+                  }
+            }
+            transition={
+              isStreaming
+                ? {
+                    duration: 1.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }
+                : {
+                    duration: 0.25,
+                  }
+            }
+            className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#101118] shadow-lg shadow-purple-950/20"
+          >
+            <img
+              src={alviraMark}
+              alt="Alvira AI"
+              className="h-6 w-6 object-contain"
+              draggable={false}
+            />
+          </motion.div>
+        </motion.div>
       )}
 
-      <div className="max-w-[80%] flex flex-col">
+      <div className="flex min-w-0 max-w-[84%] flex-col sm:max-w-[80%]">
         {message.image && (
-          <div className="mb-2 rounded-xl overflow-hidden border border-purple-950/30 max-w-xs self-end">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            className="mb-2 max-w-xs self-end overflow-hidden rounded-xl border border-purple-950/30"
+          >
             <img
               src={message.image}
               alt="User attached file"
-              className="w-full h-auto object-cover max-h-48"
+              className="h-auto max-h-64 w-full object-cover"
             />
-          </div>
+          </motion.div>
         )}
 
-        <div
-          className={`p-4 rounded-2xl text-sm leading-relaxed relative ${
+        <motion.div
+          layout
+          transition={{
+            layout: {
+              duration: 0.18,
+              ease: "easeOut",
+            },
+          }}
+          className={`relative min-w-0 rounded-2xl p-3.5 text-sm leading-relaxed sm:p-4 ${
             isUser
-              ? "bg-purple-600 text-white rounded-tr-none shadow-md shadow-purple-900/10"
-              : "bg-[#16171f] border border-purple-950/20 text-[#c5c6c7] rounded-tl-none"
+              ? "rounded-tr-none bg-purple-600 text-white shadow-md shadow-purple-900/10"
+              : "rounded-tl-none border border-purple-950/20 bg-[#16171f] text-[#c5c6c7]"
           }`}
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap">{message.text}</p>
+            <p className="break-words whitespace-pre-wrap">{message.text}</p>
           ) : (
-            <RenderMarkdown text={message.text} />
+            <div className="min-w-0 overflow-hidden">
+              <RenderMarkdown text={message.text} />
+
+              {isStreaming && (
+                <motion.span
+                  animate={{
+                    opacity: [1, 0.25, 1],
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="ml-1 inline-block text-purple-300"
+                >
+                  ▋
+                </motion.span>
+              )}
+            </div>
           )}
 
-          <div className="flex items-center justify-between mt-3 text-[9px] text-[#8b8e99] border-t border-purple-950/10 pt-1.5">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-purple-950/10 pt-1.5 text-[9px] text-[#8b8e99]">
             {message.timestamp && (
               <span className="flex items-center gap-1 font-mono">
-                <Clock className="w-2.5 h-2.5" /> {message.timestamp}
+                <Clock className="h-2.5 w-2.5" />
+                {message.timestamp}
+              </span>
+            )}
+
+            {isStreaming && (
+              <span className="flex items-center gap-1 font-medium text-purple-300">
+                <motion.span
+                  animate={{
+                    opacity: [0.35, 1, 0.35],
+                    scale: [0.85, 1.15, 0.85],
+                  }}
+                  transition={{
+                    duration: 1.1,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="h-1.5 w-1.5 rounded-full bg-purple-400"
+                />
+                Responding
               </span>
             )}
 
             {message.simulated && (
-              <span className="px-1.5 py-0.5 bg-yellow-950/10 border border-yellow-500/20 rounded text-[8px] font-mono text-yellow-400 font-bold flex items-center gap-0.5 uppercase">
-                <AlertCircle className="w-2 h-2" /> Local Sandbox Mode
+              <span className="flex items-center gap-0.5 rounded border border-yellow-500/20 bg-yellow-950/10 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase text-yellow-400">
+                <AlertCircle className="h-2 w-2" />
+                Local Sandbox Mode
               </span>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {isUser && (
-        <div className="w-8 h-8 rounded-full bg-purple-600/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <img
-            src={userAvatarUrl}
-            alt="User Avatar"
-            className="w-8 h-8 rounded-full object-cover"
-          />
-        </div>
+      {isUser && showAvatar && (
+        <motion.div
+          initial={{
+            opacity: 0,
+            scale: 0.8,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.22,
+          }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-purple-500/20 bg-purple-600/10"
+        >
+          {userAvatarUrl ? (
+            <img
+              src={userAvatarUrl}
+              alt="User avatar"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="text-xs font-bold text-purple-300">U</span>
+          )}
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

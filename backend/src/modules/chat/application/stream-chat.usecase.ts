@@ -1,10 +1,11 @@
-import { ConversationRepository } from "../../conversation/domain/conversation.repository.js";
-import { MessageRepository } from "../../message/domain/message.repository.js";
-import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { AIService } from "../../ai/application/ai.service.js";
 import { getAIProfile } from "../../ai/application/profile-registry.js";
 import { AiTool } from "../../ai/domain/ai-tool.js";
+import { ConversationRepository } from "../../conversation/domain/conversation.repository.js";
 import { MemoryService } from "../../memory/application/memory.service.js";
+import { MessageRepository } from "../../message/domain/message.repository.js";
+import { CheckCreditsUseCase } from "../../usage/application/check-credits.usecase.js";
+import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { ChatContextBuilder } from "./chat-context.builder.js";
 
 type StreamChatInput = {
@@ -14,6 +15,8 @@ type StreamChatInput = {
   onChunk: (chunk: string) => void;
 };
 
+const CHAT_CREDIT_COST = 100;
+
 export class StreamChatUseCase {
   constructor(
     private readonly messageRepository: MessageRepository,
@@ -22,6 +25,7 @@ export class StreamChatUseCase {
     private readonly createUsageLogUseCase: CreateUsageLogUseCase,
     private readonly memoryService: MemoryService,
     private readonly chatContextBuilder: ChatContextBuilder,
+    private readonly checkCreditsUseCase: CheckCreditsUseCase,
   ) {}
 
   async execute(data: StreamChatInput) {
@@ -32,6 +36,13 @@ export class StreamChatUseCase {
     if (!conversation) {
       throw new Error("Conversation not found");
     }
+
+    // Wajib sebelum stream dibuka dan sebelum AI dipanggil.
+    await this.checkCreditsUseCase.execute(
+      conversation.userId,
+      CHAT_CREDIT_COST,
+    );
+
     const summary = await this.memoryService.getSummary(data.conversationId);
 
     const userMessage = await this.messageRepository.create({
@@ -62,21 +73,20 @@ export class StreamChatUseCase {
       onChunk: data.onChunk,
     });
 
-    const assistantText = response.content;
-
     const assistantMessage = await this.messageRepository.create({
       conversationId: data.conversationId,
       role: "assistant",
-      content: assistantText,
+      content: response.content,
     });
 
     await this.createUsageLogUseCase.execute({
       userId: conversation.userId,
       conversationId: conversation.id,
-      model: "gpt-4.1-mini",
+      model: aiProfile.model,
       promptTokens: 0,
       completionTokens: 0,
-      totalTokens: 0,
+      totalTokens: CHAT_CREDIT_COST,
+      creditsToConsume: CHAT_CREDIT_COST,
       cost: 0,
     });
 

@@ -1,16 +1,19 @@
-import { ConversationRepository } from "../../conversation/domain/conversation.repository.js";
-import { MessageRepository } from "../../message/domain/message.repository.js";
-import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 import { AIService } from "../../ai/application/ai.service.js";
-import { AiTool } from "../../ai/domain/ai-tool.js";
 import { getAIProfile } from "../../ai/application/profile-registry.js";
+import { AiTool } from "../../ai/domain/ai-tool.js";
+import { ConversationRepository } from "../../conversation/domain/conversation.repository.js";
 import { MemoryService } from "../../memory/application/memory.service.js";
+import { MessageRepository } from "../../message/domain/message.repository.js";
+import { CheckCreditsUseCase } from "../../usage/application/check-credits.usecase.js";
+import { CreateUsageLogUseCase } from "../../usage/application/create-usage-log.usecase.js";
 
 type SendChatInput = {
   conversationId: string;
   content: string;
   tool: AiTool;
 };
+
+const CHAT_CREDIT_COST = 100;
 
 export class SendChatUseCase {
   constructor(
@@ -19,6 +22,7 @@ export class SendChatUseCase {
     private readonly aiService: AIService,
     private readonly createUsageLogUseCase: CreateUsageLogUseCase,
     private readonly memoryService: MemoryService,
+    private readonly checkCreditsUseCase: CheckCreditsUseCase,
   ) {}
 
   async execute(data: SendChatInput) {
@@ -29,6 +33,12 @@ export class SendChatUseCase {
     if (!conversation) {
       throw new Error("Conversation not found");
     }
+
+    // Wajib sebelum menyimpan pesan atau memanggil AI.
+    await this.checkCreditsUseCase.execute(
+      conversation.userId,
+      CHAT_CREDIT_COST,
+    );
 
     const summary = await this.memoryService.getSummary(data.conversationId);
 
@@ -43,7 +53,6 @@ export class SendChatUseCase {
     );
 
     const limitedMessages = previousMessages.slice(-20);
-
     const aiProfile = getAIProfile(data.tool);
 
     const response = await this.aiService.generate({
@@ -66,21 +75,20 @@ ${summary || "No memory yet."}`,
       maxTokens: aiProfile.maxTokens,
     });
 
-    const aiReply = response.content;
-
     const assistantMessage = await this.messageRepository.create({
       conversationId: data.conversationId,
       role: "assistant",
-      content: aiReply,
+      content: response.content,
     });
 
     await this.createUsageLogUseCase.execute({
       userId: conversation.userId,
       conversationId: conversation.id,
-      model: "gpt-4.1-mini",
+      model: aiProfile.model,
       promptTokens: 0,
       completionTokens: 0,
-      totalTokens: 0,
+      totalTokens: CHAT_CREDIT_COST,
+      creditsToConsume: CHAT_CREDIT_COST,
       cost: 0,
     });
 

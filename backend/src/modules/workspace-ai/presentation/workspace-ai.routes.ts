@@ -1,14 +1,10 @@
 import { Router } from "express";
+import { betterAuthMiddleware } from "../../../middlewares/better-auth.middleware.js";
 import { WorkspaceAIController } from "./workspace-ai.controller.js";
-import { authMiddleware } from "../../../middlewares/auth.middleware.js";
 
 const router = Router();
 const controller = new WorkspaceAIController();
 
-router.post(
-  "/workspaces/:id/chat",
-  authMiddleware,
-  controller.chat.bind(controller),
-);
+router.post("/workspaces/:id/chat", betterAuthMiddleware, controller.chat);
 
 export default router;

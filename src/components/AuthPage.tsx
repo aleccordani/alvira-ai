@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { authClient } from "../lib/auth-client";
 import {
   Mail,
   Lock,
@@ -14,8 +15,6 @@ import {
   Globe,
   Loader2,
   FileText,
-  Github,
-  Apple,
 } from "lucide-react";
 import { UserProfile } from "../types";
 import {
@@ -103,102 +102,27 @@ export default function AuthPage({
 
   const steps = lang === "id" ? loadingStepsId : loadingStepsEn;
 
-  const handleSocialLogin = (provider: "google" | "apple" | "github") => {
+  const handleGoogleLogin = async () => {
     setError("");
-    setIsLoading(true);
-    setLoadingStep(0);
 
-    const providerStepsEn = {
-      google: [
-        "Connecting with Google Secure Gateway...",
-        "Authorizing OAuth scopes for Google Identity...",
-        "Retrieving user profile info...",
-        "Setting up Alvira workspace...",
-      ],
-      apple: [
-        "Initializing Apple ID Authorization Client...",
-        "Verifying Apple Private Relay Session...",
-        "Retrieving tokenized profile metadata...",
-        "Setting up Alvira workspace...",
-      ],
-      github: [
-        "Connecting with GitHub OAuth Secure Gate...",
-        "Authenticating secure access token...",
-        "Retrieving developer & repository metadata...",
-        "Setting up Alvira workspace...",
-      ],
-    };
+    try {
+      setIsLoading(true);
+      setLoadingStep(0);
 
-    const providerStepsId = {
-      google: [
-        "Menghubungkan dengan Gerbang Aman Google...",
-        "Mengotorisasi cakupan OAuth untuk Google Identity...",
-        "Mengambil info profil pengguna...",
-        "Menyiapkan ruang kerja Alvira...",
-      ],
-      apple: [
-        "Menginisialisasi Klien Otorisasi Apple ID...",
-        "Memverifikasi Sesi Relai Privat Apple...",
-        "Mengambil metadata profil yang ditokenisasi...",
-        "Menyiapkan ruang kerja Alvira...",
-      ],
-      github: [
-        "Menghubungkan dengan Gerbang Aman OAuth GitHub...",
-        "Mengautentikasi token akses aman...",
-        "Mengambil metadata pengembang & repositori...",
-        "Menyiapkan ruang kerja Alvira...",
-      ],
-    };
-
-    const activeSteps =
-      lang === "id" ? providerStepsId[provider] : providerStepsEn[provider];
-    setCustomSteps(activeSteps);
-
-    let currentStep = 0;
-    const stepInterval = setInterval(() => {
-      setLoadingStep((prev) => {
-        if (prev >= activeSteps.length - 1) {
-          clearInterval(stepInterval);
-          setTimeout(() => {
-            setIsLoading(false);
-
-            let nameVal = "Alex Rivera";
-            let emailVal = "alex.rivera@alvira.ai";
-            let bioVal = "Principal Solutions Architect at TechFlow.";
-            let avatarVal =
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuAgbYMLZXHUC_EfeCV6EOAjpI4TJ1IxaVaBX6hUTQh3ctsieIYxdHLCDdFPRUtuG7cArnxA8-51kklrwmKVOlA-9e3srz68gwhZEb69y_fdaKy2JOpK6SLqV1MDruOEO02_VvPKNPepYBZAXeqfD2wKr2x4O2pJ4QcuiDZD1Cpucs4jnzRDyTU3saIzEuTHiEUXbkHuU7flZMC2N4U6NGA_052JycXvda6q_orSLzxx-NjVg659XsGcICp_j5jelpo1gYgPEZWYMBpX";
-
-            if (provider === "google") {
-              nameVal = "Dani Muhammad";
-              emailVal = "muhmmddani10@gmail.com";
-              bioVal = "Google Cloud Certified Developer & AI enthusiast.";
-              avatarVal =
-                "https://api.dicebear.com/7.x/pixel-art/svg?seed=dani";
-            } else if (provider === "apple") {
-              nameVal = "Alex Appleby";
-              emailVal = "alex.appleby@privaterelay.appleid.com";
-              bioVal = "Developer on Apple Ecosystem using Swift & React.";
-              avatarVal = "https://api.dicebear.com/7.x/bottts/svg?seed=apple";
-            } else if (provider === "github") {
-              nameVal = "dani-github";
-              emailVal = "muhmmddani10@users.noreply.github.com";
-              bioVal = "Fullstack developer | Open source contributor.";
-              avatarVal =
-                "https://api.dicebear.com/7.x/identicon/svg?seed=github-dani";
-            }
-
-            onSuccess({
-              name: nameVal,
-              email: emailVal,
-              bio: bioVal,
-              avatarUrl: avatarVal,
-            });
-          }, 600);
-          return prev;
-        }
-        return prev + 1;
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: window.location.origin,
       });
-    }, 1000);
+    } catch (error) {
+      console.error("GOOGLE LOGIN ERROR:", error);
+
+      setIsLoading(false);
+      setError(
+        lang === "id"
+          ? "Gagal masuk menggunakan Google."
+          : "Failed to sign in with Google.",
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -416,11 +340,12 @@ export default function AuthPage({
                 </div>
 
                 {/* Social logins */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <div className="mb-6">
                   <button
                     type="button"
-                    onClick={() => handleSocialLogin("google")}
-                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0b0c10] border border-purple-950/20 hover:border-purple-600/50 rounded-xl text-xs font-semibold text-white transition duration-200 cursor-pointer shadow-sm hover:shadow-purple-950/30"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#0b0c10] border border-purple-950/20 hover:border-purple-600/50 rounded-xl text-xs font-semibold text-white transition duration-200 cursor-pointer shadow-sm hover:shadow-purple-950/30 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <svg
                       className="w-4 h-4 shrink-0"
@@ -444,25 +369,12 @@ export default function AuthPage({
                         fill="#EA4335"
                       />
                     </svg>
-                    <span>{t.googleLogin}</span>
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin("apple")}
-                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0b0c10] border border-purple-950/20 hover:border-purple-600/50 rounded-xl text-xs font-semibold text-white transition duration-200 cursor-pointer shadow-sm hover:shadow-purple-950/30"
-                  >
-                    <Apple className="w-4 h-4 text-white shrink-0" />
-                    <span>{t.appleLogin}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin("github")}
-                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0b0c10] border border-purple-950/20 hover:border-purple-600/50 rounded-xl text-xs font-semibold text-white transition duration-200 cursor-pointer shadow-sm hover:shadow-purple-950/30"
-                  >
-                    <Github className="w-4 h-4 text-white shrink-0" />
-                    <span>{t.githubLogin}</span>
+                    <span>
+                      {lang === "id"
+                        ? "Lanjutkan dengan Google"
+                        : "Continue with Google"}
+                    </span>
                   </button>
                 </div>
 
@@ -759,7 +671,11 @@ export default function AuthPage({
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
                       >
-                        {steps[loadingStep]}
+                        {isLoading
+                          ? lang === "id"
+                            ? "Mengalihkan ke Google..."
+                            : "Redirecting to Google..."
+                          : steps[loadingStep]}
                       </motion.div>
                     </AnimatePresence>
                   </div>

@@ -1,3 +1,5 @@
+export type UserRole = "USER" | "ADMIN";
+
 export interface ChatMessage {
   id: string;
   sender: "user" | "model";
@@ -22,6 +24,7 @@ export interface UserProfile {
   bio: string;
   avatarUrl: string;
   plan: "Free" | "Pro" | "Business";
+  role: UserRole;
   theme: "light" | "dark" | "system";
   tokensUsed: number;
   tokensLimit: number;

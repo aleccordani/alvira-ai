@@ -18,8 +18,17 @@ export type CreateUsageLogInput = {
   completionTokens?: number;
   totalTokens?: number;
   cost?: number;
+  creditsToConsume?: number;
+};
+
+export type CreditBalance = {
+  monthlyCredits: number;
+  creditsUsed: number;
+  creditsRemaining: number;
 };
 
 export interface UsageRepository {
   create(data: CreateUsageLogInput): Promise<UsageLogEntity>;
+
+  getCreditBalance(userId: string): Promise<CreditBalance>;
 }

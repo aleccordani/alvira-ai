@@ -2,14 +2,13 @@ import { PrismaConversationRepository } from "../modules/conversation/infrastruc
 import { PrismaMessageRepository } from "../modules/message/infrastructure/prisma-message.repository.js";
 import { PrismaUsageRepository } from "../modules/usage/infrastructure/prisma-usage.repository.js";
 import { PrismaMemoryRepository } from "../modules/memory/infrastructure/prisma-memory.repository.js";
-
 import { CreateUsageLogUseCase } from "../modules/usage/application/create-usage-log.usecase.js";
 import { MemoryService } from "../modules/memory/application/memory.service.js";
-
 import { SendChatUseCase } from "../modules/chat/application/send-chat.usecase.js";
 import { StreamChatUseCase } from "../modules/chat/application/stream-chat.usecase.js";
 import { ChatContextBuilder } from "../modules/chat/application/chat-context.builder.js";
 import { ChatController } from "../modules/chat/presentation/chat.controller.js";
+import { CheckCreditsUseCase } from "../modules/usage/application/check-credits.usecase.js";
 
 import { aiService } from "./ai.container.js";
 
@@ -19,6 +18,7 @@ const usageRepository = new PrismaUsageRepository();
 const memoryRepository = new PrismaMemoryRepository();
 
 const createUsageLogUseCase = new CreateUsageLogUseCase(usageRepository);
+const checkCreditsUseCase = new CheckCreditsUseCase(usageRepository);
 const memoryService = new MemoryService(memoryRepository);
 const chatContextBuilder = new ChatContextBuilder();
 
@@ -28,6 +28,7 @@ const sendChatUseCase = new SendChatUseCase(
   aiService,
   createUsageLogUseCase,
   memoryService,
+  checkCreditsUseCase,
 );
 
 const streamChatUseCase = new StreamChatUseCase(
@@ -37,6 +38,7 @@ const streamChatUseCase = new StreamChatUseCase(
   createUsageLogUseCase,
   memoryService,
   chatContextBuilder,
+  checkCreditsUseCase,
 );
 
 export const chatController = new ChatController(

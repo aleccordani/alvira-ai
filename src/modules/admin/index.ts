@@ -1,2 +1,2 @@
-export * from "./services/admin.service";
-export { default as AdminDashboard } from "./components/AdminDashboard";
+export { default as AdminPage } from "./pages/AdminPage";
+export { adminService } from "./services/admin.service";

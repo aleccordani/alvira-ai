@@ -6,13 +6,37 @@ import type {
   GenerateImageResponse,
 } from "../types";
 
+type GenerateImageApiResponse = {
+  success?: boolean;
+  image?: string;
+  data?: {
+    image?: string;
+  };
+};
+
+type ImageHistoryApiResponse = {
+  success?: boolean;
+  data?: GeneratedImage[];
+};
+
 export const imageGenerationService = {
   async generate(
     payload: GenerateImageRequest,
   ): Promise<GenerateImageResponse> {
-    const { data } = await api.post("/image/generate", payload);
+    const response = await api.post<GenerateImageApiResponse>(
+      "/image/generate",
+      payload,
+    );
 
-    return data;
+    const image = response.data.data?.image ?? response.data.image ?? "";
+
+    if (!image) {
+      throw new Error("Image URL was not returned by the backend.");
+    }
+
+    return {
+      image,
+    };
   },
 
   async delete(imageId: string): Promise<void> {
@@ -20,8 +44,14 @@ export const imageGenerationService = {
   },
 
   async getHistory(): Promise<GeneratedImage[]> {
-    const { data } = await api.get("/image/history");
+    const response = await api.get<ImageHistoryApiResponse | GeneratedImage[]>(
+      "/image/history",
+    );
 
-    return data;
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+
+    return response.data.data ?? [];
   },
 };

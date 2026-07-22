@@ -107,19 +107,19 @@ export default function DashboardTab({
               {user.name}
             </span>
           </h1>
-          <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
+          {/* <p className="text-xs text-[#8b8e99] mt-1.5 font-light">
             You are running on **Alvira Pro** workspace. Let&apos;s automate
             your tasks today.
-          </p>
+          </p> */}
         </div>
 
         {/* Action Widgets */}
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <div className="px-3 py-1.5 bg-purple-950/20 border border-purple-500/10 rounded-lg text-xs font-semibold text-purple-400 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Model Active: Alvira-Pro
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Quick Action Cards Row */}

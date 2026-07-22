@@ -38,6 +38,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         planId: user.planId,
         avatar: user.avatar,
       },
@@ -55,6 +56,7 @@ export class AuthService {
     if (!user.password) {
       throw new Error("Please login using your OAuth provider");
     }
+
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordValid) {
@@ -68,23 +70,12 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         planId: user.planId,
         avatar: user.avatar,
       },
       token,
     };
-  }
-
-  private generateToken(userId: string) {
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new Error("JWT_SECRET is not defined");
-    }
-
-    return jwt.sign({ userId }, secret, {
-      expiresIn: "7d",
-    });
   }
 
   async me(userId: string) {
@@ -98,9 +89,22 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
       avatar: user.avatar,
       planId: user.planId,
       createdAt: user.createdAt,
     };
+  }
+
+  private generateToken(userId: string) {
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+
+    return jwt.sign({ userId }, secret, {
+      expiresIn: "7d",
+    });
   }
 }
